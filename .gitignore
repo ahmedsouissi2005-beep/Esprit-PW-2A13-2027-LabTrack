@@ -9,7 +9,7 @@ Thumbs.db
 *.log
 *.tmp
 node_modules/
-vendor/
+/vendor/
 
 # Configuration locale (mots de passe) : ne jamais la publier
 .env
