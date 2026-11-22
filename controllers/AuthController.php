@@ -490,6 +490,128 @@ class AuthController extends Controller
         }
     }
 
+    /** Espace personnel du patient */
+    public function dashboard(): void
+    {
+        self::requireAuth();
+        $user = $this->findById((int) $_SESSION['user_id']);
+        if (!$user) {
+            $this->logoutAction();
+        }
+        $this->renderFront('user_space', [
+            'pageTitle'   => $this->t['nav_dashboard'] . ' - LabTrack',
+            'currentPage' => 'dashboard',
+            'user'        => $user,
+        ]);
+    }
+
+    /** Mon profil : nom, langue, mot de passe */
+    public function profile(): void
+    {
+        self::requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+        $profileErrors  = [];
+        $passwordErrors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (($_POST['form'] ?? '') === 'password') {
+                $passwordErrors = $this->changePassword($userId, $_POST);
+                if (empty($passwordErrors)) {
+                    self::setFlash('success', 'msg_password_updated');
+                    $this->redirect('profile');
+                }
+            } else {
+                $profileErrors = $this->updateProfile($userId, $_POST);
+                if (empty($profileErrors)) {
+                    // la langue a pu changer : on recharge la page dans la nouvelle langue
+                    self::setFlash('success', 'msg_profile_updated');
+                    $this->redirect('profile');
+                }
+            }
+        }
+
+        $user = $this->findById($userId);
+        if (!$user) {
+            $this->logoutAction();
+        }
+        $this->renderFront('profile', [
+            'pageTitle'      => $this->t['profile_title'] . ' - LabTrack',
+            'currentPage'    => 'profile',
+            'user'           => $user,
+            'profileErrors'  => $profileErrors,
+            'passwordErrors' => $passwordErrors,
+            'flash'          => self::pullFlash(),
+        ]);
+    }
+
+    /** Modifier son profil : nom et langue préférée */
+    public function updateProfile(int $userId, array $post): array
+    {
+        $errors = [];
+
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            $errors[] = $this->t['err_csrf'];
+            return $errors;
+        }
+
+        $nom    = trim($post['nom'] ?? '');
+        $langue = $post['langue'] ?? '';
+
+        if (!$this->isValidNom($nom)) {
+            $errors[] = $this->t['err_nom'];
+        }
+        if (!in_array($langue, self::LANGUES, true)) {
+            $errors[] = $this->t['err_langue'];
+        }
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        $stmt = $this->db->prepare('UPDATE utilisateur SET nom = :nom, langue = :langue WHERE id = :id');
+        $stmt->execute(['nom' => $nom, 'langue' => $langue, 'id' => $userId]);
+
+        $_SESSION['nom']    = $nom;
+        $_SESSION['langue'] = $langue;
+        return [];
+    }
+
+    /** Changer son mot de passe (l'ancien est exigé) */
+    public function changePassword(int $userId, array $post): array
+    {
+        $errors = [];
+
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            $errors[] = $this->t['err_csrf'];
+            return $errors;
+        }
+
+        $current = $post['current_password'] ?? '';
+        $new     = $post['new_password'] ?? '';
+        $confirm = $post['new_password_confirm'] ?? '';
+
+        $user = $this->findById($userId);
+        if (!$user || !password_verify($current, $user->getPassword())) {
+            $errors[] = $this->t['err_current_password'];
+            return $errors;
+        }
+        if (strlen($new) < 8) {
+            $errors[] = $this->t['err_password_length'];
+        }
+        if ($new !== $confirm) {
+            $errors[] = $this->t['err_password_match'];
+        }
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        // Toute modification de mot de passe passe aussi par password_hash()
+        $stmt = $this->db->prepare('UPDATE utilisateur SET password = :password WHERE id = :id');
+        $stmt->execute(['password' => password_hash($new, PASSWORD_DEFAULT), 'id' => $userId]);
+
+        session_regenerate_id(true);
+        return [];
+    }
+
     // ==============================================================
     // CONTRÔLE DES RÔLES
     // ==============================================================
