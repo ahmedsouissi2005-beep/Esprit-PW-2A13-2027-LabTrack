@@ -41,6 +41,63 @@ class AuthController extends Controller
         ]);
     }
 
+    /** Connexion */
+    public function loginPage(): void
+    {
+        if (self::isAuthenticated()) {
+            $this->redirect(self::homeFor());
+        }
+        $errors = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $errors = $this->login($_POST);
+            if (empty($errors)) {
+                $this->redirect(self::homeFor());
+            }
+        }
+        $this->renderFront('login', [
+            'pageTitle'   => $this->t['login_title'] . ' - LabTrack',
+            'currentPage' => 'login',
+            'errors'      => $errors,
+            'flash'       => self::pullFlash(), // ex : session fermée par une connexion ailleurs
+        ]);
+    }
+
+    /** Inscription */
+    public function registerPage(): void
+    {
+        if (self::isAuthenticated()) {
+            $this->redirect(self::homeFor());
+        }
+        $errors = [];
+        $old = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $errors = $this->register($_POST);
+            $old = [
+                'nom'    => $_POST['nom'] ?? '',
+                'email'  => $_POST['email'] ?? '',
+                'langue' => $_POST['langue'] ?? self::getLang(),
+            ];
+            if (empty($errors)) {
+                $this->redirect('login', 'registered=1');
+            }
+        }
+        $this->renderFront('register', [
+            'pageTitle'   => $this->t['register_title'] . ' - LabTrack',
+            'currentPage' => 'register',
+            'errors'      => $errors,
+            'old'         => $old,
+        ]);
+    }
+
+    /** Déconnexion */
+    public function logoutAction(): void
+    {
+        $this->logout();
+        $this->redirect('login');
+    }
+
+    
+
     /** Changer la langue puis revenir à la page d'origine */
     public function changeLang(): void
     {
@@ -192,6 +249,77 @@ class AuthController extends Controller
             }
         }
         return null; // presque tous les codes sont pris (10 000 possibles)
+    }
+
+    // ==============================================================
+    // INSCRIPTION (REGISTER)
+    // ==============================================================
+    public function register(array $post): array
+    {
+        $errors = [];
+
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            $errors[] = $this->t['err_csrf'];
+            return $errors;
+        }
+
+        $nom             = trim($post['nom'] ?? '');
+        $email           = trim($post['email'] ?? '');
+        $password        = $post['password'] ?? '';
+        $passwordConfirm = $post['password_confirm'] ?? '';
+        $langue          = $post['langue'] ?? self::getLang();
+
+        if ($nom === '' || $email === '' || $password === '') {
+            $errors[] = $this->t['err_required'];
+        }
+        if (!$this->isValidNom($nom)) {
+            $errors[] = $this->t['err_nom'];
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = $this->t['err_email'];
+        }
+        if (strlen($password) < 8) {
+            $errors[] = $this->t['err_password_length'];
+        }
+        if ($password !== $passwordConfirm) {
+            $errors[] = $this->t['err_password_match'];
+        }
+        if (!in_array($langue, self::LANGUES, true)) {
+            $errors[] = $this->t['err_langue'];
+        }
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        if ($this->existsByEmail($email)) {
+            $errors[] = $this->t['err_email_taken'];
+            return $errors;
+        }
+
+        // Hachage sécurisé du mot de passe (bcrypt via password_hash)
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Rôle forcé à 'patient' : personne ne peut s'inscrire comme admin
+        // depuis le formulaire public. Seul un administrateur peut donner
+        // le rôle 'admin' à un compte, depuis le backoffice.
+        $user = new UserModel();
+        $user->setNom($nom);
+        $user->setEmail($email);
+        $user->setPassword($hashedPassword);
+        $user->setRole('patient');
+        $user->setLangue($langue);
+
+        $code = $this->generateUniqueCode();
+        if ($code === null) {
+            $errors[] = $this->t['err_generic'];
+            return $errors;
+        }
+        $user->setCode($code);
+
+        if (!$this->insertUser($user)) {
+            $errors[] = $this->t['err_generic'];
+        }
+        return $errors; // tableau vide = succès
     }
 
     // ==============================================================
