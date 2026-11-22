@@ -1,0 +1,94 @@
+/* ==========================================================================
+   LabTrack Admin - personnalisation du template Registrar (backoffice)
+   Comme l'indique le README de Registrar, on change les couleurs via les
+   variables CSS (tokens) : bleu marine et vert LabTrack au lieu du teal,
+   terracotta au lieu de l'ambre.
+   ========================================================================== */
+/* Thème CLAIR : uniquement quand le mode sombre n'est pas actif.
+   (Avant, ce bloc était sur :root et, chargé après style.css, il écrasait
+    les couleurs du mode sombre : texte foncé sur fond foncé.) */
+:root:not([data-bs-theme="dark"]) {
+  --rg-primary: #1E3A5F;
+  --rg-primary-rgb: 30, 58, 95;
+  --rg-primary-btn: #1E3A5F;
+  --rg-primary-btn-hover: #152A45;
+  --rg-primary-soft: #E3EAF3;
+  --rg-ring: rgba(30, 58, 95, .22);
+  --rg-accent: #C65D3B;
+  --rg-accent-soft: #FBEAE4;
+  --rg-accent-ink: #5a2414;
+  --rg-bg: #F2F3F1;
+  --rg-ink: #2b221c;
+  --rg-good: #23724A;
+  --rg-good-soft: #E5F3EB;
+  --rg-good-fill: #2F8F5B;
+  --rg-warn: #9b3f22;
+  --rg-warn-soft: #FBEAE4;
+  --rg-warn-fill: #C65D3B;
+  --rg-focus: #2F8F5B;
+  --rg-sb-top: #1E3A5F;
+  --rg-sb-bottom: #152A45;
+  --viz-1: #2F8F5B;
+  --viz-bar: #2F8F5B;
+}
+
+/* Thème SOMBRE : on garde les fonds et textes sombres de Registrar
+   et on remplace seulement les couleurs d'accent par celles de LabTrack. */
+[data-bs-theme="dark"] {
+  --rg-primary: #7FB2EC;
+  --rg-primary-rgb: 127, 178, 236;
+  --rg-primary-btn: #2D5A8E;
+  --rg-primary-btn-hover: #3A6CA6;
+  --rg-primary-soft: rgba(127, 178, 236, .14);
+  --rg-ring: rgba(127, 178, 236, .3);
+  --rg-accent: #E8957A;
+  --rg-accent-soft: rgba(232, 149, 122, .15);
+  --rg-good: #6ad19a;
+  --rg-good-soft: rgba(106, 209, 154, .13);
+  --rg-good-fill: #2F8F5B;
+  --rg-warn: #F0A68C;
+  --rg-warn-soft: rgba(240, 166, 140, .14);
+  --rg-warn-fill: #C65D3B;
+  --rg-focus: #6ad19a;
+  --rg-sb-top: #12233A;
+  --rg-sb-bottom: #0B1727;
+  --viz-1: #4CB27A;
+  --viz-bar: #3E9E6A;
+}
+
+/* Logo LabTrack dans la sidebar (pastille blanche pour rester lisible sur le bleu marine) */
+.lt-brand-mark { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 10px; background: #fff; padding: 4px; }
+.lt-brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Modules des autres membres : pas encore disponibles */
+.lt-nav-soon { opacity: .55; cursor: default; }
+
+/* Sélecteur de langue dans la barre du haut */
+.lt-lang-switch { display: inline-flex; gap: 4px; margin: 0; }
+.lt-lang-switch button {
+  border: 1px solid var(--rg-line-2); background: var(--rg-surface); color: var(--rg-ink-2);
+  border-radius: 999px; padding: 4px 10px; font-size: .75rem; font-weight: 700; cursor: pointer;
+}
+.lt-lang-switch button.active { background: var(--rg-good-fill); border-color: var(--rg-good-fill); color: #fff; }
+
+/* Actions de la table des utilisateurs */
+.lt-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lt-inline-form { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.lt-inline-form .form-select-sm { width: auto; min-width: 120px; }
+.lt-grow { flex: 1; min-width: 0; }
+.alert { border-radius: var(--rg-radius-sm); }
+
+/* ---------- Arabe : lecture de droite à gauche ---------- */
+[dir="rtl"] .table-data th, [dir="rtl"] .table-data td { text-align: right; }
+[dir="rtl"] .bar-value { text-align: left; }
+[dir="rtl"] .filter-search > svg { left: auto; right: 12px; }
+[dir="rtl"] .filter-search .form-control { padding-left: 12px; padding-right: 38px; }
+[dir="rtl"] .topbar-search > svg { left: auto; right: 12px; }
+[dir="rtl"] .topbar-search .form-control { padding-left: 12px; padding-right: 38px; }
+[dir="rtl"] .search-kbd { right: auto; left: 10px; }
+[dir="rtl"] .dropdown-menu-end { --bs-position: start; }
+
+/* Fiche d'un compte (page Ajouter / Modifier un utilisateur) */
+.lt-details { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: .875rem; }
+.lt-details dt { color: var(--rg-muted); font-weight: 600; }
+.lt-details dd { margin: 0; color: var(--rg-ink); }

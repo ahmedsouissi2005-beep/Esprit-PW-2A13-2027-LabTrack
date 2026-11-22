@@ -1,0 +1,16 @@
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Fichiers générés
+*.log
+*.tmp
+node_modules/
+vendor/
+
+# Configuration locale (mots de passe) : ne jamais la publier
+.env
+config/database.local.php

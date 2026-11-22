@@ -1,0 +1,125 @@
+/* ==========================================================================
+   LabTrack - personnalisation du template Novena (frontoffice)
+   Charte : bleu marine #1E3A5F, vert #2F8F5B, terracotta #C65D3B,
+            gris clair #F2F3F1, marron foncé #4A3A2F
+   (les couleurs principales de Novena ont aussi été remplacées dans style.css)
+   ========================================================================== */
+:root {
+  --lt-navy: #1E3A5F;
+  --lt-green: #2F8F5B;
+  --lt-green-light: #E5F3EB;
+  --lt-terracotta: #C65D3B;
+  --lt-terracotta-light: #FBEAE4;
+  --lt-gray: #F2F3F1;
+  --lt-brown: #4A3A2F;
+}
+
+body { color: var(--lt-brown); }
+.gray-bg { background: var(--lt-gray); }
+.lt-logo { height: 52px; width: auto; }
+.lt-logo-footer { height: 110px; width: auto; }
+.lt-card-logo { display: block; height: 110px; width: auto; margin: 0 auto 18px; }
+
+/* ---------- Spinner (includes/spinner.php) ---------- */
+.lt-spinner {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; opacity: 0; visibility: hidden;
+  transition: opacity .4s ease, visibility 0s linear .4s;
+}
+.lt-spinner.show { opacity: 1; visibility: visible; transition: opacity .4s ease; }
+.lt-spinner-ring {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 4px solid var(--lt-green-light); border-top-color: var(--lt-green);
+  animation: lt-spin .8s linear infinite;
+}
+@keyframes lt-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Sélecteur de langue ---------- */
+.lt-lang-switch { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.lt-lang-label { color: #fff; font-size: 14px; margin-inline-end: 4px; }
+.lt-lang-switch button {
+  background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .45);
+  border-radius: 20px; padding: 2px 12px; font-size: 13px; cursor: pointer; line-height: 1.6;
+}
+.lt-lang-switch button:hover { background: rgba(255, 255, 255, .15); }
+.lt-lang-switch button.active { background: var(--lt-green); border-color: var(--lt-green); }
+
+/* ---------- Navbar ---------- */
+.navigation .nav-item.active .nav-link { color: var(--lt-green); }
+.lt-nav-btn { display: flex; align-items: center; margin-inline-start: 12px; }
+.lt-nav-btn .btn { padding: 10px 22px; font-size: 13px; }
+@media (max-width: 991px) { .lt-nav-btn { margin: 10px 0; } }
+
+/* ---------- Cartes, formulaires, alertes ---------- */
+.lt-card {
+  background: #fff; border-radius: 10px; padding: 36px;
+  border-top: 4px solid var(--lt-green);
+  box-shadow: 0 6px 30px rgba(30, 58, 95, .08);
+}
+.lt-card label { font-size: 14px; color: var(--lt-navy); font-weight: 600; }
+.appoinment-form .form-control { height: 50px; border-radius: 6px; }
+.appoinment-form select.form-control { padding-top: 8px; }
+.lt-link { color: var(--lt-green); font-weight: 600; }
+.lt-link:hover { color: var(--lt-navy); }
+.lt-note { font-size: 13px; color: #6F665F; }
+.alert-danger { background: var(--lt-terracotta-light); border-color: #F0C3B5; color: #9b2c1c; }
+.alert-success { background: var(--lt-green-light); border-color: #B9DEC8; color: #23724A; }
+.lt-kicker { color: var(--lt-green); font-weight: 600; }
+
+/* ---------- Espace personnel ---------- */
+.lt-avatar {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: var(--lt-navy); color: #fff; font-size: 30px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.lt-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.lt-badge-patient { background: var(--lt-green-light); color: #23724A; }
+.lt-badge-admin { background: var(--lt-terracotta-light); color: var(--lt-terracotta); }
+.lt-info li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+.lt-info li strong { color: var(--lt-navy); }
+.lt-module {
+  display: flex; gap: 16px; align-items: flex-start; height: 100%;
+  background: #fff; border-radius: 10px; padding: 22px;
+  border-inline-start: 4px solid var(--lt-green);
+  box-shadow: 0 4px 18px rgba(30, 58, 95, .06);
+}
+.lt-module i { font-size: 34px; color: var(--lt-green); }
+.lt-module h5 { color: var(--lt-navy); }
+.lt-module p { font-size: 14px; line-height: 1.5; }
+.lt-soon { font-size: 12px; font-weight: 600; color: var(--lt-terracotta); }
+
+/* ---------- Accueil ---------- */
+.service .service-item .icon i { color: var(--lt-green); margin-inline-end: 16px; }
+.lt-cta { background: var(--lt-navy); }
+.lt-disclaimer { font-size: 14px; color: var(--lt-green); font-weight: 600; }
+
+/* ---------- Arabe : lecture de droite à gauche ----------
+   Bootstrap 4 (utilisé par Novena) n'a pas de version RTL : on corrige ici
+   les éléments principaux. */
+[dir="rtl"] body { text-align: right; }
+[dir="rtl"] .navbar-nav.ml-auto { margin-left: 0 !important; margin-right: auto !important; }
+[dir="rtl"] .text-lg-right { text-align: left !important; }
+[dir="rtl"] .text-left { text-align: right !important; }
+[dir="rtl"] .mr-1, [dir="rtl"] .mr-2, [dir="rtl"] .mr-3 { margin-right: 0 !important; margin-left: .5rem !important; }
+[dir="rtl"] .ml-2, [dir="rtl"] .ml-3 { margin-left: 0 !important; margin-right: .5rem !important; }
+[dir="rtl"] .pr-5 { padding-right: 0 !important; padding-left: 3rem !important; }
+[dir="rtl"] .pl-4 { padding-left: 0 !important; padding-right: 1.5rem !important; }
+[dir="rtl"] .icofont-simple-right, [dir="rtl"] .icofont-long-arrow-right { display: inline-block; transform: scaleX(-1); }
+[dir="rtl"] .divider { margin-right: 0; }
+[dir="rtl"] .banner .row { flex-direction: row; }
+[dir="rtl"] .banner .block { direction: rtl; }
+[dir="rtl"] .footer-contact-block .icon i { margin-left: 1rem; }
+
+/* Novena met une majuscule à chaque mot des titres : inadapté au français et à l'arabe */
+.banner .block h1, .page-title .block h1, .section-title h2, .text-capitalize { text-transform: none !important; }
+
+/* Arabe : on retourne l'image de la bannière (le médecin passe à gauche, le texte reste à droite) */
+[dir="rtl"] .banner { transform: scaleX(-1); }
+[dir="rtl"] .banner > .container { transform: scaleX(-1); }
+
+/* Code personnel à 4 chiffres (espace personnel) */
+.lt-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 12px; background: #f1f6f3; border: 1px dashed #2F8F5B; }
+.lt-code span { font-size: .85rem; color: #4a5a52; }
+.lt-code strong { font-size: 1.4rem; letter-spacing: .12em; color: #1E3A5F; font-variant-numeric: tabular-nums; }
+.lt-code-note { margin: 6px 0 0; font-size: .78rem; color: #6c757d; text-align: start; }
