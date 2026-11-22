@@ -170,6 +170,12 @@ class AuthController extends Controller
         return $row ? UserModel::fromArray($row) : null;
     }
 
+    /** Validation commune du nom (lettres latines ou arabes, espaces, ' et -) */
+    private function isValidNom(string $nom): bool
+    {
+        return (bool) preg_match("/^[\p{L}][\p{L}\s'\-]{1,99}$/u", $nom);
+    }
+
     /**
      * Code personnel à 4 chiffres (0000 à 9999), tiré au hasard et unique.
      * random_int() est un générateur cryptographique : le code n'est pas devinable
@@ -497,6 +503,28 @@ class AuthController extends Controller
         $stmt = $this->db->prepare('SELECT id FROM utilisateur WHERE email = :email AND id <> :id LIMIT 1');
         $stmt->execute(['email' => $email, 'id' => $exceptId]);
         return (bool) $stmt->fetch();
+    }
+
+    /** Validation commune des formulaires de compte du backoffice (ajout et modification) */
+    private function validateAccountFields(string $nom, string $email, string $role, string $langue): array
+    {
+        $errors = [];
+        if ($nom === '' || $email === '') {
+            $errors[] = $this->t['err_required'];
+        }
+        if (!$this->isValidNom($nom)) {
+            $errors[] = $this->t['err_nom'];
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = $this->t['err_email'];
+        }
+        if (!in_array($role, self::ROLES, true)) {
+            $errors[] = $this->t['err_role'];
+        }
+        if (!in_array($langue, self::LANGUES, true)) {
+            $errors[] = $this->t['err_langue'];
+        }
+        return $errors;
     }
 
     /**

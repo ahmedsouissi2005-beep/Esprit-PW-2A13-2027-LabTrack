@@ -39,3 +39,23 @@ function initials(string $name): string
     }
     return $letters !== '' ? $letters : '?';
 }
+
+/**
+ * Attributs à placer sur un <form> pour activer la validation JavaScript
+ * (assets/js/form-validation.js) avec les messages dans la langue courante.
+ */
+function validationAttrs(array $t): string
+{
+    $messages = [
+        'required' => 'err_field_required',
+        'email'    => 'err_email',
+        'nom'      => 'err_nom',
+        'length'   => 'err_password_length',
+        'match'    => 'err_password_match',
+    ];
+    $html = 'novalidate data-validate';
+    foreach ($messages as $name => $key) {
+        $html .= ' data-msg-' . $name . '="' . e($t[$key] ?? '') . '"';
+    }
+    return $html;
+}
