@@ -150,18 +150,18 @@ LabTrack/
    http://localhost/Esprit-PW-2A13-2027-LabTrack/index.php
    ```
 
-> **Project status:** `main` starts with the documentation and the template assets only.
-> Each member brings their part on their own branch, then opens a Pull Request to `main`.
-> The application runs once all the branches below are merged.
+> **How the module was built:** `main` started with the documentation and the template assets only.
+> Each member brought their part on their own branch through a Pull Request (all merged).
+> Ismail, Fadi and Yassine merged into `feature/security-sessions`, which was merged into `main` last.
 >
-> | Branch | Member | Brings |
-> |---|---|---|
-> | `feature/security-sessions` | Ahmed | `index.php`, routes, base controller, `AdminController`, `AuthController` (sessions, CSRF, roles, brute force, admin CRUD), layouts and partials, `docs/SECURITE.md` |
-> | `feature/user-database` | Aziz | `database.sql`, `config/database.php`, `models/UserModel.php` |
-> | `feature/user-auth` | Ismail | login and register pages, `loginPage` / `registerPage` / `register` / `logoutAction` |
-> | `feature/user-profile` | Fadi | profile and patient space pages, `dashboard` / `profile` / `updateProfile` / `changePassword` |
-> | `feature/user-backoffice` | Fatma | back office pages (`users`, `user_form`, `dashboard`), their scripts, `assets/back/js/users.js` |
-> | `feature/user-validation` | Yassine | `form-validation.js`, `validationAttrs()`, `isValidNom` / `validateAccountFields`, `config/lang/` |
+> | Branch | Member | Pull Request | Brings |
+> |---|---|---|---|
+> | `feature/security-sessions` | Ahmed | #1 | `index.php`, routes, base controller, `AdminController`, `AuthController` (sessions, CSRF, roles, brute force, admin CRUD), layouts and partials, `docs/SECURITE.md` |
+> | `feature/user-database` | Aziz | #5 | `database.sql`, `config/database.php`, `models/UserModel.php` |
+> | `feature/user-auth` | Ismail | #6 | login and register pages, `loginPage` / `registerPage` / `register` / `logoutAction` |
+> | `feature/user-profile` | Fadi | #7 | profile and patient space pages, `dashboard` / `profile` / `updateProfile` / `changePassword` |
+> | `feature/user-backoffice` | Fatma | #2 | back office pages (`users`, `user_form`, `dashboard`), their scripts, `assets/back/js/users.js` |
+> | `feature/user-validation` | Yassine | #3 | `form-validation.js`, `validationAttrs()`, `isValidNom` / `validateAccountFields`, `config/lang/` |
 
 ## Usage
 
@@ -203,10 +203,10 @@ LabTrack/
 |---|---|---|
 | Ahmed | Security & sessions, roles & access control, admin CRUD logic, repository and reviews | [@ahmedsouissi2005-beep](https://github.com/ahmedsouissi2005-beep) |
 | Aziz | Database & model | [@marouaniaziz08-byte](https://github.com/marouaniaziz08-byte) |
-| Ismail | Register, login, logout pages | `@username` |
-| Fadi | Profile & patient space | `@username` |
+| Ismail | Register, login, logout pages | [@notisma](https://github.com/notisma) |
+| Fadi | Profile & patient space | [@charrifedi](https://github.com/charrifedi) |
 | Fatma | Back office pages | [@bouattourfatma12-debug](https://github.com/bouattourfatma12-debug) |
-| Yassine | Validation & translations | `@username` |
+| Yassine | Validation & translations | [@idc01-ux](https://github.com/idc01-ux) |
 
 **LabTrack modules (next steps)**
 
