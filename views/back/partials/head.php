@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="assets/back/css/vendor/bootstrap.min.css">
     <link rel="stylesheet" href="assets/back/css/style.css">
     <!-- Personnalisation LabTrack : couleurs de la charte + arabe -->
-    <link rel="stylesheet" href="assets/back/css/labtrack.css">
+    <link rel="stylesheet" href="<?= e(asset('assets/back/css/labtrack.css')) ?>">
 </head>
 <body data-page="<?= e($currentPage ?? 'admin') ?>">
 <a class="skip-link" href="#main">Skip to main content</a>

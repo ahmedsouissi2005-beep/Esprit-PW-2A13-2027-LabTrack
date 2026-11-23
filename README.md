@@ -49,7 +49,7 @@ This project was developed as part of the **Web Technologies Project (Projet Web
 - One account per email (an email can be reused only after its account is deleted), and a unique **4-digit personal code** (e.g. `#0427`) visible only to the account owner
 - Two roles: **patient** (front office) and **admin** (back office). Public sign-up always creates a patient: only an admin can grant the admin role.
 - Interface in **Arabic (right-to-left), French and English**, chosen at sign-up, switchable on every page and saved in the user's profile
-- Profile page: change name, language and password, and add a **profile picture** (JPG, PNG or WebP, 2 MB max; real file type checked on the server, random file name, stored in `storage/avatars/` which cannot be opened directly, shown only through `index.php?page=avatar` to its owner or an admin)
+- Profile page: change name, language and password, and a **profile picture** like on social networks: click the round photo, pick an image and it is saved at once (JPG, PNG or WebP, 2 MB max). The real file type is checked on the server, the file gets a random name and is stored in `storage/avatars/`, which cannot be opened directly: it is shown through `index.php?page=avatar` to every logged-in member (patient pages, admin user list, dashboard and top bar)
 - Admin back office: statistics and full user **CRUD** — add an account (with its role and language), view an account's details, edit it (name, email, role, language, new password), delete it — plus search and filter by role
 - Input validation on every form: in **PHP** on the server (always) and in **JavaScript** in the browser (`assets/js/form-validation.js`, messages in the current language)
 - Security: prepared statements (SQL injection), `password_hash()` / bcrypt, output escaping and Content-Security-Policy (XSS), CSRF tokens on every form, `session_regenerate_id()`, HttpOnly/SameSite cookies, role check on every protected page
@@ -174,7 +174,7 @@ LabTrack/
 | `register`, `login` | Visitors | Create an account (patient role), log in |
 | `dashboard` | Logged-in users | Personal space of the patient |
 | `profile` | Logged-in users | Change profile picture, name, language, password |
-| `avatar` | Logged-in users | Profile picture (own account, or any account for an admin) |
+| `avatar` | Logged-in users | Profile picture of any account (`&id=`), visible to every logged-in member |
 | `admin` | Admin only | Back office dashboard |
 | `admin_users` | Admin only | Search accounts, change a role, delete an account |
 

@@ -38,10 +38,36 @@ function avatarHtml(UserModel $user, string $extraClass = ''): string
     $class = trim('lt-avatar ' . $extraClass);
     $avatar = $user->getAvatar();
     if ($avatar !== null) {
-        $src = 'index.php?page=avatar&id=' . $user->getId() . '&v=' . substr($avatar, 0, 8);
+        $src = avatarUrl($user->getId(), $avatar);
         return '<img src="' . e($src) . '" alt="' . e($user->getNom()) . '" class="' . e($class) . ' lt-avatar-img">';
     }
     return '<div class="' . e($class) . '">' . e(initials($user->getNom())) . '</div>';
+}
+
+/** Fichier du site suivi de ?v=date de modification : le navigateur recharge la nouvelle version après une mise à jour */
+function asset(string $path): string
+{
+    $file = dirname(__DIR__) . '/' . $path;
+    return $path . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
+/** Adresse de la photo d'un compte (le paramètre v change à chaque nouvelle photo : pas d'ancienne image en cache) */
+function avatarUrl(int $userId, string $avatar): string
+{
+    return 'index.php?page=avatar&id=' . $userId . '&v=' . substr($avatar, 0, 8);
+}
+
+/**
+ * Pastille du backoffice (template Registrar) : la photo si elle existe, sinon les initiales.
+ * $classes : classes de taille ou de couleur, ex. "av-2 avatar-lg".
+ */
+function adminAvatar(int $userId, string $nom, ?string $avatar, string $classes = ''): string
+{
+    $class = trim('avatar ' . $classes);
+    if ($avatar !== null && $avatar !== '') {
+        return '<img src="' . e(avatarUrl($userId, $avatar)) . '" alt="" class="' . e($class) . ' avatar-img">';
+    }
+    return '<span class="' . e($class) . '" aria-hidden="true">' . e(initials($nom)) . '</span>';
 }
 
 /** Initiales d'un nom (avatar du backoffice) */

@@ -68,7 +68,7 @@ $currentId = $admin ? $admin->getId() : 0;
                 <tr>
                     <td class="cell-main" data-label="<?= $t['nom'] ?>">
                         <div class="person">
-                            <span class="avatar av-<?= ($u->getId() % 5) + 1 ?>" aria-hidden="true"><?= e(initials($u->getNom())) ?></span>
+                            <?= adminAvatar($u->getId(), $u->getNom(), $u->getAvatar(), 'av-' . (($u->getId() % 5) + 1)) ?>
                             <div>
                                 <span class="person-name"><?= e($u->getNom()) ?> <?php if ($u->getId() === $currentId): ?><small class="text-muted"><?= $t['you'] ?></small><?php endif; ?></span>
                                 <span class="person-meta">#<?= $u->getId() ?></span>

@@ -49,17 +49,23 @@
                         </div>
                     <?php endif; ?>
                     <div class="lt-photo-row">
-                        <?= avatarHtml($user) ?>
+                        <!-- Comme sur un réseau social : on clique sur le rond pour choisir une photo,
+                             elle est envoyée tout de suite (assets/front/js/labtrack.js) -->
                         <form class="lt-photo-form" method="POST" action="index.php?page=profile" enctype="multipart/form-data" <?= validationAttrs($t) ?>>
                             <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
                             <input type="hidden" name="form" value="avatar">
                             <input type="hidden" name="MAX_FILE_SIZE" value="2097152">
-                            <div class="form-group mb-2">
-                                <label for="avatar"><?= $t['photo_label'] ?></label>
-                                <input type="file" id="avatar" name="avatar" class="form-control" required data-rule="photo" accept="image/jpeg,image/png,image/webp">
-                                <small class="form-text text-muted"><?= $t['photo_hint'] ?></small>
+                            <label for="avatar" class="lt-avatar-picker" title="<?= $t['photo_change'] ?>">
+                                <?= avatarHtml($user, 'lt-avatar-xl') ?>
+                                <span class="lt-avatar-cam" aria-hidden="true"><i class="icofont-camera"></i></span>
+                                <span class="sr-only"><?= $t['photo_change'] ?></span>
+                            </label>
+                            <input type="file" id="avatar" name="avatar" class="lt-file-hidden" required data-rule="photo" data-autosubmit accept="image/jpeg,image/png,image/webp">
+                            <div class="lt-photo-text">
+                                <p class="mb-1"><strong><?= $t['photo_change'] ?></strong></p>
+                                <small class="text-muted"><?= $t['photo_hint'] ?></small>
                             </div>
-                            <button type="submit" class="btn btn-main btn-round-full"><?= $t['btn_upload_photo'] ?></button>
+                            <button type="submit" class="btn btn-main btn-round-full lt-nojs-only"><?= $t['btn_upload_photo'] ?></button>
                         </form>
                         <?php if ($user->getAvatar() !== null): ?>
                             <form method="POST" action="index.php?page=profile">

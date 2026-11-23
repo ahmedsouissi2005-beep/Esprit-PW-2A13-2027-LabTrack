@@ -203,7 +203,8 @@ return [
     // Profile picture
     'photo_section'     => 'Profile picture',
     'photo_label'       => 'Choose a picture',
-    'photo_hint'        => 'JPG, PNG or WebP, 2 MB maximum.',
+    'photo_hint'        => 'Click the picture to change it: JPG, PNG or WebP, 2 MB maximum. Other members can see it.',
+    'photo_change'      => 'Change profile picture',
     'btn_upload_photo'  => 'Save picture',
     'btn_remove_photo'  => 'Remove picture',
     'msg_photo_updated' => 'Your profile picture has been updated.',

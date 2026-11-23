@@ -25,4 +25,4 @@
 <link rel="stylesheet" href="assets/front/css/style.css">
 
 <!-- Personnalisation LabTrack (charte graphique, spinner, sélecteur de langue, arabe) -->
-<link rel="stylesheet" href="assets/front/css/labtrack.css">
+<link rel="stylesheet" href="<?= e(asset('assets/front/css/labtrack.css')) ?>">

@@ -92,3 +92,7 @@
 .lt-details { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: .875rem; }
 .lt-details dt { color: var(--rg-muted); font-weight: 600; }
 .lt-details dd { margin: 0; color: var(--rg-ink); }
+
+/* Photo de profil à la place des initiales (helpers.php : adminAvatar) */
+.avatar.avatar-img { object-fit: cover; padding: 0; background: var(--av-bg); }
+.avatar-xl.avatar-img { border-radius: 50%; }

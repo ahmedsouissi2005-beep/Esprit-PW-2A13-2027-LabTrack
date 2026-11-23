@@ -382,6 +382,7 @@ class AuthController extends Controller
         $_SESSION['email']         = $user->getEmail();
         $_SESSION['role']          = $user->getRole();
         $_SESSION['langue']        = $user->getLangue(); // l'interface passe dans sa langue
+        $_SESSION['avatar']        = $user->getAvatar(); // photo affichée dans les barres du site
         $_SESSION['last_activity'] = time();
         return []; // succès
     }
@@ -712,6 +713,7 @@ class AuthController extends Controller
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = :avatar WHERE id = :id');
         $stmt->execute(['avatar' => $name, 'id' => $userId]);
         self::deleteAvatarFile($user ? $user->getAvatar() : null); // l'ancienne photo ne sert plus
+        $_SESSION['avatar'] = $name;
         return [];
     }
 
@@ -748,21 +750,19 @@ class AuthController extends Controller
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = NULL WHERE id = :id');
         $stmt->execute(['id' => $userId]);
         self::deleteAvatarFile($user ? $user->getAvatar() : null);
+        $_SESSION['avatar'] = null;
         return [];
     }
 
     /**
      * Page "avatar" : envoie la photo d'un compte.
-     * Son propre compte seulement, ou n'importe lequel pour un admin.
+     * Comme sur un réseau social, la photo de profil est visible par tous les
+     * membres connectés ; un visiteur non connecté est renvoyé vers la connexion.
      */
     public function avatar(): void
     {
         self::requireAuth();
-        $id = isset($_GET['id']) ? (int) $_GET['id'] : (int) $_SESSION['user_id'];
-        if ($id !== (int) $_SESSION['user_id'] && !self::hasRole('admin')) {
-            http_response_code(403);
-            exit;
-        }
+        $id   = isset($_GET['id']) ? (int) $_GET['id'] : (int) $_SESSION['user_id'];
         $user = $this->findById($id);
         $path = self::avatarPath($user ? $user->getAvatar() : null);
         if ($path === null || !is_file($path)) {

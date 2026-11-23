@@ -86,7 +86,7 @@ $roles = ['patient' => $totalPatients, 'admin' => $totalAdmins];
             <ul class="notice-list">
                 <?php foreach ($recentUsers as $u): ?>
                     <li class="notice">
-                        <span class="avatar av-<?= ($u->getId() % 5) + 1 ?>" aria-hidden="true"><?= e(initials($u->getNom())) ?></span>
+                        <?= adminAvatar($u->getId(), $u->getNom(), $u->getAvatar(), 'av-' . (($u->getId() % 5) + 1)) ?>
                         <div class="lt-grow">
                             <p class="person-name mb-0"><?= e($u->getNom()) ?></p>
                             <span class="person-meta"><?= e($u->getEmail()) ?></span>

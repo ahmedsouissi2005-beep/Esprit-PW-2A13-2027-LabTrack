@@ -203,7 +203,8 @@ return [
     // Photo de profil
     'photo_section'     => 'Photo de profil',
     'photo_label'       => 'Choisir une photo',
-    'photo_hint'        => 'JPG, PNG ou WebP, 2 Mo maximum.',
+    'photo_hint'        => 'Cliquez sur la photo pour la changer : JPG, PNG ou WebP, 2 Mo maximum. Elle est visible par les autres membres.',
+    'photo_change'      => 'Changer la photo de profil',
     'btn_upload_photo'  => 'Enregistrer la photo',
     'btn_remove_photo'  => 'Retirer la photo',
     'msg_photo_updated' => 'Votre photo de profil a été mise à jour.',

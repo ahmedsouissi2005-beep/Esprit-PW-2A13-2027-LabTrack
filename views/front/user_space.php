@@ -43,7 +43,10 @@ $modules = [
             <!-- Carte du compte -->
             <div class="col-lg-4 mb-4">
                 <div class="lt-card text-center">
-                    <?= avatarHtml($user, 'mx-auto mb-3') ?>
+                    <a href="index.php?page=profile" class="lt-avatar-picker lt-avatar-link mx-auto mb-3" title="<?= $t['photo_change'] ?>">
+                        <?= avatarHtml($user) ?>
+                        <span class="lt-avatar-cam" aria-hidden="true"><i class="icofont-camera"></i></span>
+                    </a>
                     <h4 class="mb-1"><?= e($user->getNom()) ?></h4>
                     <p class="mb-3"><?= e($user->getEmail()) ?></p>
                     <span class="lt-badge lt-badge-<?= e($role) ?>"><?= $t['role_' . $role] ?? '' ?></span>

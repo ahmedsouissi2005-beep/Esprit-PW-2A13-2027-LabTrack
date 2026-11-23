@@ -5,4 +5,4 @@
  * Injectés par Controller::render() dans $extraScripts.
  */
 ?>
-<script src="assets/js/form-validation.js"></script>
+<script src="<?= e(asset('assets/js/form-validation.js')) ?>"></script>
