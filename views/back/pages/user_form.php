@@ -101,7 +101,7 @@ $action = 'index.php?page=admin_user_form' . ($editing ? '&id=' . $target->getId
                 <div class="panel-head"><h2 class="panel-title" id="ficheTitle"><?= $t['account_details'] ?></h2></div>
                 <div class="panel-body">
                     <div class="person mb-3">
-                        <span class="avatar av-<?= ($target->getId() % 5) + 1 ?>" aria-hidden="true"><?= e(initials($target->getNom())) ?></span>
+                        <?= adminAvatar($target->getId(), $target->getNom(), $target->getAvatar(), 'av-' . (($target->getId() % 5) + 1) . ' avatar-xl') ?>
                         <div>
                             <span class="person-name"><?= e($target->getNom()) ?></span>
                             <span class="person-meta"><?= e($target->getEmail()) ?></span>

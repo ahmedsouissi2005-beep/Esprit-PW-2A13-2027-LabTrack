@@ -75,7 +75,28 @@ body { color: var(--lt-brown); }
 }
 .lt-avatar-img { display: block; object-fit: cover; background: #fff; border: 3px solid var(--lt-green-light); }
 .lt-photo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
-.lt-photo-form { flex: 1 1 280px; }
+.lt-photo-form { flex: 1 1 280px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
+.lt-avatar-xl { width: 120px; height: 120px; font-size: 42px; }
+/* rond cliquable avec un petit appareil photo, comme sur les réseaux sociaux */
+.lt-avatar-picker { position: relative; display: block; width: max-content; margin: 0; cursor: pointer; border-radius: 50%; }
+.lt-avatar-picker .lt-avatar { transition: filter .2s; }
+.lt-avatar-picker:hover .lt-avatar, .lt-avatar-picker:focus-within .lt-avatar { filter: brightness(.8); }
+.lt-avatar-cam {
+  position: absolute; right: 0; bottom: 0; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lt-navy); color: #fff; font-size: 17px; border: 3px solid #fff;
+}
+.lt-avatar-link .lt-avatar-cam { width: 30px; height: 30px; font-size: 14px; }
+[dir="rtl"] .lt-avatar-cam { right: auto; left: 0; }
+.lt-avatar-picker.is-uploading { pointer-events: none; }
+.lt-avatar-picker.is-uploading .lt-avatar { filter: brightness(.6); }
+.lt-avatar-picker.is-uploading .lt-avatar-cam i { animation: lt-pulse 1s infinite; }
+@keyframes lt-pulse { 50% { opacity: .3; } }
+/* le vrai champ fichier reste dans la page (clavier, validation) mais invisible */
+.lt-file-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.lt-file-hidden:focus + .lt-photo-text, .lt-avatar-picker:focus-within { outline: 2px solid var(--lt-green); }
+.lt-photo-form .invalid-feedback { flex-basis: 100%; }
+.lt-js .lt-nojs-only { display: none; }
 .lt-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
 .lt-badge-patient { background: var(--lt-green-light); color: #23724A; }
 .lt-badge-admin { background: var(--lt-terracotta-light); color: var(--lt-terracotta); }

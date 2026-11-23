@@ -7,6 +7,8 @@
  */
 $adminName  = $_SESSION['nom'] ?? '';
 $adminEmail = $_SESSION['email'] ?? '';
+$adminId    = (int) ($_SESSION['user_id'] ?? 0);
+$adminPhoto = $_SESSION['avatar'] ?? null;
 ?>
 <div class="app-main">
 <header class="topbar">
@@ -36,12 +38,12 @@ $adminEmail = $_SESSION['email'] ?? '';
 
         <div class="dropdown">
             <button type="button" class="user-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?= e($adminName) ?>">
-                <span class="avatar av-2" aria-hidden="true"><?= e(initials($adminName)) ?></span>
+                <?= adminAvatar($adminId, $adminName, $adminPhoto, 'av-2') ?>
                 <span class="user-text"><span class="user-name"><?= e($adminName) ?></span><span class="user-role"><?= $t['role_admin'] ?></span></span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <ul class="dropdown-menu dropdown-menu-end user-menu">
-                <li class="user-menu-head"><span class="avatar av-2 avatar-lg" aria-hidden="true"><?= e(initials($adminName)) ?></span><span><span class="user-name"><?= e($adminName) ?></span><span class="user-role"><?= e($adminEmail) ?></span></span></li>
+                <li class="user-menu-head"><?= adminAvatar($adminId, $adminName, $adminPhoto, 'av-2 avatar-lg') ?><span><span class="user-name"><?= e($adminName) ?></span><span class="user-role"><?= e($adminEmail) ?></span></span></li>
                 <li><a class="dropdown-item" href="index.php?page=profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><?= $t['nav_profile'] ?></a></li>
                 <li><a class="dropdown-item" href="index.php?page=home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><?= $t['nav_back_front'] ?></a></li>
                 <li><hr class="dropdown-divider"></li>
