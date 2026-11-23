@@ -13,6 +13,7 @@ return [
     'dashboard'    => ['AuthController', 'dashboard'],
     'profile'      => ['AuthController', 'profile'],
     'set_lang'     => ['AuthController', 'changeLang'],
+    'avatar'       => ['AuthController', 'avatar'],      // photo de profil (servie par PHP)
 
     // ---------------- BACKOFFICE (template Registrar, rôle admin) ----------------
     'admin'        => ['AdminController', 'dashboard'],

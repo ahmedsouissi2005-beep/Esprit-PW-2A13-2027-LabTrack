@@ -73,6 +73,9 @@ body { color: var(--lt-brown); }
   background: var(--lt-navy); color: #fff; font-size: 30px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
+.lt-avatar-img { display: block; object-fit: cover; background: #fff; border: 3px solid var(--lt-green-light); }
+.lt-photo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+.lt-photo-form { flex: 1 1 280px; }
 .lt-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
 .lt-badge-patient { background: var(--lt-green-light); color: #23724A; }
 .lt-badge-admin { background: var(--lt-terracotta-light); color: var(--lt-terracotta); }

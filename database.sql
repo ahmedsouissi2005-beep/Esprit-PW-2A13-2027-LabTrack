@@ -33,8 +33,12 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     session_token CHAR(64) NULL DEFAULT NULL,
     failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
     locked_until  DATETIME NULL DEFAULT NULL,
+    avatar        VARCHAR(64) NULL DEFAULT NULL,   -- nom du fichier photo (storage/avatars/), NULL = initiales
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Base déjà créée avant la photo de profil ? Exécuter une seule fois :
+-- ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until;
 
 -- ------------------------------------------------------------
 -- Compte administrateur de test (optionnel)

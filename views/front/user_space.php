@@ -43,7 +43,7 @@ $modules = [
             <!-- Carte du compte -->
             <div class="col-lg-4 mb-4">
                 <div class="lt-card text-center">
-                    <div class="lt-avatar mx-auto mb-3"><?= e(initials($user->getNom())) ?></div>
+                    <?= avatarHtml($user, 'mx-auto mb-3') ?>
                     <h4 class="mb-1"><?= e($user->getNom()) ?></h4>
                     <p class="mb-3"><?= e($user->getEmail()) ?></p>
                     <span class="lt-badge lt-badge-<?= e($role) ?>"><?= $t['role_' . $role] ?? '' ?></span>
