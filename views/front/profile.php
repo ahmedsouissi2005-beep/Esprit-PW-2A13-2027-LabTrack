@@ -1,8 +1,8 @@
 <?php
 /**
  * views/front/profile.php
- * Modifier son nom, sa langue préférée et son mot de passe.
- * Variables : $pageTitle, $currentPage = 'profile', $user, $profileErrors, $passwordErrors, $flash
+ * Modifier sa photo, son nom, sa langue préférée et son mot de passe.
+ * Variables : $pageTitle, $currentPage = 'profile', $user, $profileErrors, $passwordErrors, $avatarErrors, $flash
  */
 ?>
 <!DOCTYPE html>
@@ -37,6 +37,41 @@
         <?php endif; ?>
 
         <div class="row">
+            <!-- Formulaire 0 : photo de profil -->
+            <div class="col-12 mb-4">
+                <div class="lt-card">
+                    <h3 class="title-color mb-4"><i class="icofont-camera mr-2"></i><?= $t['photo_section'] ?></h3>
+                    <?php if (!empty($avatarErrors)): ?>
+                        <div class="alert alert-danger">
+                            <?php foreach ($avatarErrors as $error): ?>
+                                <div><?= e($error) ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="lt-photo-row">
+                        <?= avatarHtml($user) ?>
+                        <form class="lt-photo-form" method="POST" action="index.php?page=profile" enctype="multipart/form-data" <?= validationAttrs($t) ?>>
+                            <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
+                            <input type="hidden" name="form" value="avatar">
+                            <input type="hidden" name="MAX_FILE_SIZE" value="2097152">
+                            <div class="form-group mb-2">
+                                <label for="avatar"><?= $t['photo_label'] ?></label>
+                                <input type="file" id="avatar" name="avatar" class="form-control" required data-rule="photo" accept="image/jpeg,image/png,image/webp">
+                                <small class="form-text text-muted"><?= $t['photo_hint'] ?></small>
+                            </div>
+                            <button type="submit" class="btn btn-main btn-round-full"><?= $t['btn_upload_photo'] ?></button>
+                        </form>
+                        <?php if ($user->getAvatar() !== null): ?>
+                            <form method="POST" action="index.php?page=profile">
+                                <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
+                                <input type="hidden" name="form" value="avatar_remove">
+                                <button type="submit" class="btn btn-main-2 btn-round-full"><?= $t['btn_remove_photo'] ?></button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Formulaire 1 : informations personnelles -->
             <div class="col-lg-6 mb-4">
                 <div class="lt-card h-100">

@@ -6,7 +6,7 @@
  * Fonctionnement :
  *  - le formulaire porte l'attribut data-validate (et novalidate pour remplacer
  *    les bulles du navigateur) ainsi que les messages traduits data-msg-* ;
- *  - chaque champ déclare ses règles : required, data-rule="nom|email|password",
+ *  - chaque champ déclare ses règles : required, data-rule="nom|email|password|photo",
  *    data-match="id_du_champ_a_recopier" ;
  *  - les erreurs s'affichent sous le champ (classes Bootstrap is-invalid / invalid-feedback).
  *
@@ -20,6 +20,9 @@
   var NOM_RE = /^\p{L}[\p{L}\s'\-]{1,99}$/u;
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var MIN_PASSWORD = 8;
+  // Même règle que AuthController::updateAvatar (le serveur lit en plus le vrai contenu du fichier)
+  var PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  var PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
   function messageFor(field, form) {
     var value = field.value.trim();
@@ -47,6 +50,11 @@
         break;
       case 'password':
         if (field.value.length < MIN_PASSWORD) { return msg('length'); }
+        break;
+      case 'photo':
+        var file = field.files && field.files[0];
+        if (file && PHOTO_TYPES.indexOf(file.type) === -1) { return msg('photo-type'); }
+        if (file && file.size > PHOTO_MAX_BYTES) { return msg('photo-size'); }
         break;
     }
     var matchId = field.getAttribute('data-match');
@@ -81,6 +89,7 @@
     // Vérification au fil de la saisie, une fois que l'utilisateur a quitté le champ
     fields.forEach(function (field) {
       field.addEventListener('blur', function () { check(field, form); });
+      field.addEventListener('change', function () { if (field.type === 'file') { check(field, form); } });
       field.addEventListener('input', function () {
         if (field.classList.contains('is-invalid')) { check(field, form); }
         // la confirmation dépend du premier mot de passe

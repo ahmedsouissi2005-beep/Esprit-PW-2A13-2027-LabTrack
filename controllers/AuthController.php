@@ -512,9 +512,19 @@ class AuthController extends Controller
         $userId = (int) $_SESSION['user_id'];
         $profileErrors  = [];
         $passwordErrors = [];
+        $avatarErrors   = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (($_POST['form'] ?? '') === 'password') {
+            $form = $_POST['form'] ?? '';
+            if ($form === 'avatar' || $form === 'avatar_remove') {
+                $avatarErrors = $form === 'avatar'
+                    ? $this->updateAvatar($userId, $_POST, $_FILES)
+                    : $this->removeAvatar($userId, $_POST);
+                if (empty($avatarErrors)) {
+                    self::setFlash('success', $form === 'avatar' ? 'msg_photo_updated' : 'msg_photo_removed');
+                    $this->redirect('profile');
+                }
+            } elseif ($form === 'password') {
                 $passwordErrors = $this->changePassword($userId, $_POST);
                 if (empty($passwordErrors)) {
                     self::setFlash('success', 'msg_password_updated');
@@ -540,6 +550,7 @@ class AuthController extends Controller
             'user'           => $user,
             'profileErrors'  => $profileErrors,
             'passwordErrors' => $passwordErrors,
+            'avatarErrors'   => $avatarErrors,
             'flash'          => self::pullFlash(),
         ]);
     }
@@ -610,6 +621,149 @@ class AuthController extends Controller
 
         session_regenerate_id(true);
         return [];
+    }
+
+    // ==============================================================
+    // PHOTO DE PROFIL
+    // ==============================================================
+    /** Types acceptés : type MIME réel => extension du fichier enregistré */
+    private const AVATAR_TYPES     = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    private const AVATAR_MAX_BYTES = 2097152; // 2 Mo
+    private const AVATAR_MAX_SIDE  = 4000;    // pixels
+
+    /**
+     * Chemin d'une photo, ou null si le nom n'a pas la forme exacte que l'on génère
+     * (32 caractères hexadécimaux + extension) : aucun "../" ni ".php" possible.
+     */
+    private static function avatarPath(?string $name): ?string
+    {
+        if ($name === null || !preg_match('/^[a-f0-9]{32}\.(jpg|png|webp)$/', $name)) {
+            return null;
+        }
+        return dirname(__DIR__) . '/storage/avatars/' . $name;
+    }
+
+    private static function deleteAvatarFile(?string $name): void
+    {
+        $path = self::avatarPath($name);
+        if ($path !== null && is_file($path)) {
+            unlink($path);
+        }
+    }
+
+    /**
+     * Ajouter ou remplacer sa photo de profil.
+     * Sécurité : jeton CSRF, taille limitée, type lu dans le contenu du fichier
+     * (jamais le nom ni le type envoyés par le navigateur), nom aléatoire,
+     * image ré-encodée si GD est disponible, dossier storage/ interdit en accès direct.
+     */
+    public function updateAvatar(int $userId, array $post, array $files): array
+    {
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            return [$this->t['err_csrf']];
+        }
+
+        $file = $files['avatar'] ?? null;
+        if (!is_array($file) || !isset($file['error']) || is_array($file['error'])) {
+            return [$this->t['err_photo_upload']];
+        }
+        if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+            return [$this->t['err_photo_size']];
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
+            return [$this->t['err_photo_upload']];
+        }
+        if ($file['size'] <= 0 || $file['size'] > self::AVATAR_MAX_BYTES) {
+            return [$this->t['err_photo_size']];
+        }
+
+        // Le vrai type, lu dans les premiers octets du fichier, doit être une image lisible
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        $info = @getimagesize($file['tmp_name']);
+        if (!isset(self::AVATAR_TYPES[$mime]) || $info === false || $info['mime'] !== $mime
+            || $info[0] < 1 || $info[1] < 1
+            || $info[0] > self::AVATAR_MAX_SIDE || $info[1] > self::AVATAR_MAX_SIDE) {
+            return [$this->t['err_photo_type']];
+        }
+
+        $dir = dirname(__DIR__) . '/storage/avatars';
+        if (!is_dir($dir) && !mkdir($dir, 0750, true)) {
+            return [$this->t['err_generic']];
+        }
+        $name   = bin2hex(random_bytes(16)) . '.' . self::AVATAR_TYPES[$mime];
+        $target = $dir . '/' . $name;
+        if (!$this->storeAvatar($file['tmp_name'], $target, $mime)) {
+            return [$this->t['err_photo_type']];
+        }
+
+        $user = $this->findById($userId);
+        $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = :avatar WHERE id = :id');
+        $stmt->execute(['avatar' => $name, 'id' => $userId]);
+        self::deleteAvatarFile($user ? $user->getAvatar() : null); // l'ancienne photo ne sert plus
+        return [];
+    }
+
+    /**
+     * Enregistre l'image. Avec l'extension GD, elle est redessinée pixel par pixel :
+     * tout contenu caché (code, métadonnées EXIF comme la position GPS) disparaît.
+     */
+    private function storeAvatar(string $tmp, string $target, string $mime): bool
+    {
+        $encoders = ['image/jpeg' => 'imagejpeg', 'image/png' => 'imagepng', 'image/webp' => 'imagewebp'];
+        if (function_exists('imagecreatefromstring') && function_exists($encoders[$mime])) {
+            $image = @imagecreatefromstring((string) file_get_contents($tmp));
+            if ($image === false) {
+                return false;
+            }
+            if ($mime !== 'image/jpeg') {
+                imagesavealpha($image, true); // garde la transparence
+            }
+            $ok = $encoders[$mime]($image, $target);
+            imagedestroy($image);
+            return $ok;
+        }
+        return move_uploaded_file($tmp, $target);
+    }
+
+    /** Retirer sa photo (retour aux initiales) */
+    public function removeAvatar(int $userId, array $post): array
+    {
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            return [$this->t['err_csrf']];
+        }
+        $user = $this->findById($userId);
+        $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = NULL WHERE id = :id');
+        $stmt->execute(['id' => $userId]);
+        self::deleteAvatarFile($user ? $user->getAvatar() : null);
+        return [];
+    }
+
+    /**
+     * Page "avatar" : envoie la photo d'un compte.
+     * Son propre compte seulement, ou n'importe lequel pour un admin.
+     */
+    public function avatar(): void
+    {
+        self::requireAuth();
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : (int) $_SESSION['user_id'];
+        if ($id !== (int) $_SESSION['user_id'] && !self::hasRole('admin')) {
+            http_response_code(403);
+            exit;
+        }
+        $user = $this->findById($id);
+        $path = self::avatarPath($user ? $user->getAvatar() : null);
+        if ($path === null || !is_file($path)) {
+            http_response_code(404);
+            exit;
+        }
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        header('Content-Type: ' . array_search($ext, self::AVATAR_TYPES, true));
+        header('Content-Length: ' . filesize($path));
+        header('Content-Disposition: inline; filename="avatar.' . $ext . '"');
+        header('Cache-Control: private, max-age=86400');
+        header("Content-Security-Policy: default-src 'none'; sandbox"); // une image, rien d'autre
+        readfile($path);
+        exit;
     }
 
     // ==============================================================
@@ -736,13 +890,15 @@ class AuthController extends Controller
             return false;
         }
         // On vérifie que le compte existe avant d'annoncer sa suppression
-        if (!$this->findById($targetId)) {
+        $target = $this->findById($targetId);
+        if (!$target) {
             self::setFlash('error', 'err_user_not_found');
             return false;
         }
 
         $stmt = $this->db->prepare('DELETE FROM utilisateur WHERE id = :id');
         $stmt->execute(['id' => $targetId]);
+        self::deleteAvatarFile($target->getAvatar()); // sa photo est supprimée avec le compte
         self::setFlash('success', 'msg_user_deleted');
         return true;
     }

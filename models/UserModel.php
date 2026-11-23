@@ -18,6 +18,7 @@ class UserModel
     private string $role = 'patient';   // patient | admin
     private string $langue = 'fr';      // fr | ar | en
     private string $createdAt = '';
+    private ?string $avatar = null;     // fichier de la photo de profil (null = initiales)
 
     // ------------------------------------------------------------
     // CONSTRUCTEUR
@@ -64,6 +65,11 @@ class UserModel
         return $this->langue;
     }
 
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
     public function getCreatedAt(): string
     {
         return $this->createdAt;
@@ -107,6 +113,11 @@ class UserModel
         $this->langue = $langue;
     }
 
+    public function setAvatar(?string $avatar): void
+    {
+        $this->avatar = ($avatar === null || $avatar === '') ? null : $avatar;
+    }
+
     public function setCreatedAt(string $createdAt): void
     {
         $this->createdAt = $createdAt;
@@ -126,6 +137,7 @@ class UserModel
         $user->setRole((string) ($row['role'] ?? 'patient'));
         $user->setLangue((string) ($row['langue'] ?? 'fr'));
         $user->setCreatedAt((string) ($row['created_at'] ?? ''));
+        $user->setAvatar(isset($row['avatar']) ? (string) $row['avatar'] : null);
         return $user;
     }
 }

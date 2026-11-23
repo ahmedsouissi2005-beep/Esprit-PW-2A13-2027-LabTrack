@@ -29,6 +29,21 @@ function ariaCurrent(string $page, string $currentPage): string
     return $page === $currentPage ? 'aria-current="page"' : '';
 }
 
+/**
+ * Rond de profil : la photo du compte si elle existe, sinon ses initiales.
+ * L'image passe par index.php?page=avatar (contrôle d'accès), jamais par un lien direct.
+ */
+function avatarHtml(UserModel $user, string $extraClass = ''): string
+{
+    $class = trim('lt-avatar ' . $extraClass);
+    $avatar = $user->getAvatar();
+    if ($avatar !== null) {
+        $src = 'index.php?page=avatar&id=' . $user->getId() . '&v=' . substr($avatar, 0, 8);
+        return '<img src="' . e($src) . '" alt="' . e($user->getNom()) . '" class="' . e($class) . ' lt-avatar-img">';
+    }
+    return '<div class="' . e($class) . '">' . e(initials($user->getNom())) . '</div>';
+}
+
 /** Initiales d'un nom (avatar du backoffice) */
 function initials(string $name): string
 {
@@ -52,6 +67,8 @@ function validationAttrs(array $t): string
         'nom'      => 'err_nom',
         'length'   => 'err_password_length',
         'match'    => 'err_password_match',
+        'photo-type' => 'err_photo_type',
+        'photo-size' => 'err_photo_size',
     ];
     $html = 'novalidate data-validate';
     foreach ($messages as $name => $key) {

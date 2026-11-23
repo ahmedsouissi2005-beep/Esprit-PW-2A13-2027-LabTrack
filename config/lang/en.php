@@ -199,4 +199,16 @@ return [
     'code_note'              => 'This 4-digit code is unique to your account and only you can see it.',
     'msg_session_replaced'   => 'Your session was closed because your account was signed in from another browser or device.',
     'msg_account_gone'       => 'Your session was closed because this account no longer exists.',
+
+    // Profile picture
+    'photo_section'     => 'Profile picture',
+    'photo_label'       => 'Choose a picture',
+    'photo_hint'        => 'JPG, PNG or WebP, 2 MB maximum.',
+    'btn_upload_photo'  => 'Save picture',
+    'btn_remove_photo'  => 'Remove picture',
+    'msg_photo_updated' => 'Your profile picture has been updated.',
+    'msg_photo_removed' => 'Your profile picture has been removed.',
+    'err_photo_type'    => 'The file must be a valid JPG, PNG or WebP image.',
+    'err_photo_size'    => 'The picture must not be larger than 2 MB.',
+    'err_photo_upload'  => 'The picture could not be uploaded. Please try again.',
 ];

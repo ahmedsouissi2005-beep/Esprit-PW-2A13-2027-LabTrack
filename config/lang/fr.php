@@ -199,4 +199,16 @@ return [
     'code_note'              => 'Ce code à 4 chiffres est unique à votre compte et vous seul pouvez le voir.',
     'msg_session_replaced'   => 'Votre session a été fermée car votre compte s’est connecté depuis un autre navigateur ou appareil.',
     'msg_account_gone'       => 'Votre session a été fermée car ce compte n’existe plus.',
+
+    // Photo de profil
+    'photo_section'     => 'Photo de profil',
+    'photo_label'       => 'Choisir une photo',
+    'photo_hint'        => 'JPG, PNG ou WebP, 2 Mo maximum.',
+    'btn_upload_photo'  => 'Enregistrer la photo',
+    'btn_remove_photo'  => 'Retirer la photo',
+    'msg_photo_updated' => 'Votre photo de profil a été mise à jour.',
+    'msg_photo_removed' => 'Votre photo de profil a été retirée.',
+    'err_photo_type'    => 'Le fichier doit être une image JPG, PNG ou WebP valide.',
+    'err_photo_size'    => 'La photo ne doit pas dépasser 2 Mo.',
+    'err_photo_upload'  => "La photo n'a pas pu être envoyée. Veuillez réessayer.",
 ];
