@@ -643,6 +643,17 @@ class AuthController extends Controller
         return dirname(__DIR__) . '/storage/avatars/' . $name;
     }
 
+    /**
+     * Base créée avant la photo de profil : on ajoute la colonne avatar une seule fois,
+     * pour que chaque membre de l'équipe n'ait rien à exécuter après un git pull.
+     */
+    private function ensureAvatarColumn(): void
+    {
+        if (!$this->db->query("SHOW COLUMNS FROM utilisateur LIKE 'avatar'")->fetch()) {
+            $this->db->exec('ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until');
+        }
+    }
+
     private static function deleteAvatarFile(?string $name): void
     {
         $path = self::avatarPath($name);
@@ -696,6 +707,7 @@ class AuthController extends Controller
             return [$this->t['err_photo_type']];
         }
 
+        $this->ensureAvatarColumn();
         $user = $this->findById($userId);
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = :avatar WHERE id = :id');
         $stmt->execute(['avatar' => $name, 'id' => $userId]);
@@ -731,6 +743,7 @@ class AuthController extends Controller
         if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
             return [$this->t['err_csrf']];
         }
+        $this->ensureAvatarColumn();
         $user = $this->findById($userId);
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = NULL WHERE id = :id');
         $stmt->execute(['id' => $userId]);

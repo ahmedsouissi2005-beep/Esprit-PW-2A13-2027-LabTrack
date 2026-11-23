@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Base déjà créée avant la photo de profil ? Exécuter une seule fois :
+-- Base déjà créée avant la photo de profil : la colonne est ajoutée automatiquement
+-- au premier envoi de photo (AuthController::ensureAvatarColumn), ou à la main :
 -- ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until;
 
 -- ------------------------------------------------------------
