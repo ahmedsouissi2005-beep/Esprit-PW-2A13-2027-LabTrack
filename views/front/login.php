@@ -45,7 +45,7 @@
                     <?php endif; ?>
 
                     <?php if (!empty($flash)): ?>
-                        <div class="alert alert-warning"><?= e($t[$flash['message']] ?? '') ?></div>
+                        <div class="alert alert-<?= $flash['type'] === 'success' ? 'success' : 'warning' ?>"><?= e($t[$flash['message']] ?? '') ?></div>
                     <?php endif; ?>
 
                     <?php if (!empty($_GET['registered'])): ?>
@@ -61,6 +61,7 @@
                         <div class="form-group">
                             <label for="password"><?= $t['password'] ?></label>
                             <input type="password" id="password" name="password" class="form-control" required autocomplete="current-password">
+                            <div class="text-right mt-2"><a href="index.php?page=forgot_password" class="lt-link small"><?= $t['forgot_link'] ?></a></div>
                         </div>
                         <button type="submit" class="btn btn-main btn-round-full btn-block mt-4"><?= $t['btn_login'] ?> <i class="icofont-simple-right ml-2"></i></button>
                     </form>

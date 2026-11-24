@@ -14,3 +14,5 @@ node_modules/
 # Configuration locale (mots de passe) : ne jamais la publier
 .env
 config/database.local.php
+config/mail.local.php
+storage/mails/

@@ -50,4 +50,22 @@
       }, 0);
     });
   });
+
+  // Mot de passe oublié : compte à rebours avant l'expiration du code (5 minutes).
+  // Le serveur refuse de toute façon un code expiré ; ceci n'est qu'un affichage.
+  document.querySelectorAll('[data-countdown]').forEach(function (box) {
+    var end = Date.now() + parseInt(box.getAttribute('data-countdown'), 10) * 1000;
+    var value = box.querySelector('.lt-countdown-value');
+    function tick() {
+      var left = Math.max(0, Math.round((end - Date.now()) / 1000));
+      value.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
+      box.classList.toggle('is-warning', left > 0 && left <= 60);
+      if (left === 0) {
+        box.classList.add('is-over');
+        clearInterval(timer);
+      }
+    }
+    var timer = setInterval(tick, 1000);
+    tick();
+  });
 })();

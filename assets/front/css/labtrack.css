@@ -147,3 +147,13 @@ body { color: var(--lt-brown); }
 .lt-code span { font-size: .85rem; color: #4a5a52; }
 .lt-code strong { font-size: 1.4rem; letter-spacing: .12em; color: #1E3A5F; font-variant-numeric: tabular-nums; }
 .lt-code-note { margin: 6px 0 0; font-size: .78rem; color: #6c757d; text-align: start; }
+
+/* Mot de passe oublié : code à 6 chiffres et compte à rebours (5 minutes) */
+.lt-code-input { font-size: 1.5rem; letter-spacing: .5em; text-align: center; font-variant-numeric: tabular-nums; }
+.lt-countdown { margin-bottom: 16px; padding: 10px 14px; border-radius: 10px; background: #f1f6f3; border: 1px solid #cfe3d7; color: #1E3A5F; text-align: center; }
+.lt-countdown strong { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+.lt-countdown.is-warning { background: #fff6e5; border-color: #f0c36d; color: #8a5a00; }
+.lt-countdown .lt-countdown-over { display: none; }
+.lt-countdown.is-over { background: #fdecea; border-color: #f5b5ae; color: #a12a1e; }
+.lt-countdown.is-over .lt-countdown-running { display: none; }
+.lt-countdown.is-over .lt-countdown-over { display: inline; }

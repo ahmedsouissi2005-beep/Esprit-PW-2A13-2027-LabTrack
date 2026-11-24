@@ -9,6 +9,8 @@ return [
     'home'         => ['AuthController', 'home'],
     'login'        => ['AuthController', 'loginPage'],
     'register'     => ['AuthController', 'registerPage'],
+    'forgot_password' => ['AuthController', 'forgotPasswordPage'], // mot de passe oublié : demande du code
+    'reset_password'  => ['AuthController', 'resetPasswordPage'],  // code reçu (5 min) + nouveau mot de passe
     'logout'       => ['AuthController', 'logoutAction'],
     'dashboard'    => ['AuthController', 'dashboard'],
     'profile'      => ['AuthController', 'profile'],
