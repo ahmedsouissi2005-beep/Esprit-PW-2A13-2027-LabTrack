@@ -42,6 +42,21 @@ CREATE TABLE IF NOT EXISTS utilisateur (
 -- ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until;
 
 -- ------------------------------------------------------------
+-- Mot de passe oublié : un code à 6 chiffres envoyé par email, valable 5 minutes.
+-- code_hash : le code haché (password_hash), jamais en clair.
+-- attempts  : mauvais codes saisis (au 5e, le code est supprimé).
+-- Table créée automatiquement au premier usage (AuthController::ensureResetTable).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS password_reset (
+    user_id    INT PRIMARY KEY,
+    code_hash  VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    attempts   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
 -- Compte administrateur de test (optionnel)
 -- Email : admin@labtrack.tn  /  Mot de passe : Admin@1234
 -- Le mot de passe est déjà haché avec password_hash() : jamais en clair.

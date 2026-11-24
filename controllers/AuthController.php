@@ -8,6 +8,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../config/Mailer.php';
 
 class AuthController extends Controller
 {
@@ -96,6 +97,62 @@ class AuthController extends Controller
         $this->redirect('login');
     }
 
+    /**
+     * Mot de passe oublié (étape 1) : l'utilisateur donne son email et reçoit un code.
+     * La réponse est la même, que le compte existe ou non (on ne révèle pas
+     * quels emails sont inscrits).
+     */
+    public function forgotPasswordPage(): void
+    {
+        if (self::isAuthenticated()) {
+            $this->redirect(self::homeFor());
+        }
+        $errors = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $errors = $this->requestResetCode($_POST);
+            if (empty($errors)) {
+                self::setFlash('success', 'msg_reset_sent');
+                $this->redirect('reset_password');
+            }
+        }
+        $this->renderFront('forgot_password', [
+            'pageTitle'   => $this->t['forgot_title'] . ' - LabTrack',
+            'currentPage' => 'forgot_password',
+            'errors'      => $errors,
+            'oldEmail'    => $_POST['email'] ?? ($_SESSION['reset_email'] ?? ''),
+        ]);
+    }
+
+    /** Mot de passe oublié (étape 2) : code reçu + nouveau mot de passe */
+    public function resetPasswordPage(): void
+    {
+        if (self::isAuthenticated()) {
+            $this->redirect(self::homeFor());
+        }
+        if (empty($_SESSION['reset_email'])) {
+            $this->redirect('forgot_password');
+        }
+        $errors = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $errors = $this->resetPassword($_POST);
+            if (empty($errors)) {
+                self::setFlash('success', 'msg_password_reset');
+                $this->redirect('login');
+            }
+        }
+        // Compte à rebours affiché : calculé depuis l'heure d'envoi gardée en session,
+        // pour se comporter de la même façon que l'email existe ou non.
+        $elapsed = time() - (int) ($_SESSION['reset_sent_at'] ?? 0);
+        $this->renderFront('reset_password', [
+            'pageTitle'   => $this->t['reset_title'] . ' - LabTrack',
+            'currentPage' => 'reset_password',
+            'errors'      => $errors,
+            'flash'       => self::pullFlash(),
+            'resetEmail'  => $_SESSION['reset_email'],
+            'secondsLeft' => max(0, self::RESET_CODE_MINUTES * 60 - $elapsed),
+        ]);
+    }
+
     
 
     /** Changer la langue puis revenir à la page d'origine */
@@ -105,7 +162,7 @@ class AuthController extends Controller
             $this->setLang($_POST);
         }
         // Liste blanche des pages de retour : pas de redirection libre
-        $allowedBack = ['home', 'login', 'register', 'dashboard', 'profile', 'admin', 'admin_users'];
+        $allowedBack = ['home', 'login', 'register', 'forgot_password', 'reset_password', 'dashboard', 'profile', 'admin', 'admin_users'];
         $back = in_array($_POST['back'] ?? '', $allowedBack, true) ? $_POST['back'] : 'home';
         $this->redirect($back);
     }
@@ -1050,6 +1107,156 @@ class AuthController extends Controller
             $_SESSION['email']  = $email;
             $_SESSION['langue'] = $langue;
         }
+        return [];
+    }
+
+    // ==============================================================
+    // MOT DE PASSE OUBLIÉ (code à 6 chiffres envoyé par email, valable 5 minutes)
+    // ==============================================================
+    /** Durée de validité du code, essais permis et délai avant un nouvel envoi */
+    public const RESET_CODE_MINUTES    = 5;
+    private const RESET_MAX_ATTEMPTS   = 5;
+    private const RESET_RESEND_SECONDS = 60;
+
+    /**
+     * Table des codes, créée automatiquement si elle n'existe pas encore
+     * (comme la colonne avatar) : rien à importer à la main dans phpMyAdmin.
+     * Une seule ligne par compte : un nouveau code remplace l'ancien.
+     */
+    private function ensureResetTable(): void
+    {
+        $this->db->exec(
+            'CREATE TABLE IF NOT EXISTS password_reset (
+                user_id    INT PRIMARY KEY,
+                code_hash  VARCHAR(255) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                attempts   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+    }
+
+    /** Étape 1 : génère un code, l'enregistre haché et l'envoie par email */
+    public function requestResetCode(array $post): array
+    {
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            return [$this->t['err_csrf']];
+        }
+        $email = trim($post['email'] ?? '');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [$this->t['err_email']];
+        }
+
+        $this->ensureResetTable();
+        $user = $this->findByEmail($email);
+        if ($user) {
+            // Anti-spam : pas plus d'un email par minute pour le même compte
+            $stmt = $this->db->prepare(
+                'SELECT TIMESTAMPDIFF(SECOND, created_at, NOW()) FROM password_reset WHERE user_id = :id'
+            );
+            $stmt->execute(['id' => $user->getId()]);
+            $age = $stmt->fetchColumn();
+            if ($age !== false && (int) $age < self::RESET_RESEND_SECONDS) {
+                return [sprintf($this->t['err_reset_wait'], self::RESET_RESEND_SECONDS - (int) $age)];
+            }
+
+            // random_int : générateur cryptographique. Le code est stocké HACHÉ
+            // (comme un mot de passe) : même avec la base, on ne peut pas le lire.
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $stmt = $this->db->prepare(
+                'REPLACE INTO password_reset (user_id, code_hash, expires_at, attempts, created_at)
+                 VALUES (:id, :hash, NOW() + INTERVAL ' . self::RESET_CODE_MINUTES . ' MINUTE, 0, NOW())'
+            );
+            $stmt->execute(['id' => $user->getId(), 'hash' => password_hash($code, PASSWORD_DEFAULT)]);
+
+            if (!$this->sendResetEmail($user, $code)) {
+                $this->db->prepare('DELETE FROM password_reset WHERE user_id = :id')->execute(['id' => $user->getId()]);
+                return [$this->t['err_mail_send']];
+            }
+        }
+
+        $_SESSION['reset_email']   = $email;
+        $_SESSION['reset_sent_at'] = time();
+        return [];
+    }
+
+    /** Email écrit dans la langue préférée du compte */
+    private function sendResetEmail(UserModel $user, string $code): bool
+    {
+        $file = __DIR__ . '/../config/lang/' . $user->getLangue() . '.php';
+        $t = in_array($user->getLangue(), self::LANGUES, true) && is_file($file) ? require $file : $this->t;
+        $body = sprintf($t['reset_mail_body'], $user->getNom(), $code, self::RESET_CODE_MINUTES);
+        return (new Mailer())->send($user->getEmail(), $t['reset_mail_subject'], $body);
+    }
+
+    /** Étape 2 : vérifie le code (5 minutes, 5 essais) puis change le mot de passe */
+    public function resetPassword(array $post): array
+    {
+        if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
+            return [$this->t['err_csrf']];
+        }
+        $code    = trim($post['code'] ?? '');
+        $new     = $post['new_password'] ?? '';
+        $confirm = $post['new_password_confirm'] ?? '';
+
+        if (!preg_match('/^\d{6}$/', $code)) {
+            return [$this->t['err_reset_code']];
+        }
+        $errors = [];
+        if (strlen($new) < 8) {
+            $errors[] = $this->t['err_password_length'];
+        }
+        if ($new !== $confirm) {
+            $errors[] = $this->t['err_password_match'];
+        }
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        $this->ensureResetTable();
+        $user = $this->findByEmail((string) ($_SESSION['reset_email'] ?? ''));
+        $row  = false;
+        if ($user) {
+            // NOW() de MySQL : la même horloge que celle qui a fixé l'expiration
+            $stmt = $this->db->prepare(
+                'SELECT code_hash, attempts, expires_at > NOW() AS still_valid
+                 FROM password_reset WHERE user_id = :id'
+            );
+            $stmt->execute(['id' => $user->getId()]);
+            $row = $stmt->fetch();
+        }
+        if (!$user || !$row) {
+            return [$this->t['err_reset_code']];
+        }
+
+        $delete = $this->db->prepare('DELETE FROM password_reset WHERE user_id = :id');
+        if (!(int) $row['still_valid']) {
+            $delete->execute(['id' => $user->getId()]);
+            return [$this->t['err_reset_expired']];
+        }
+        if (!password_verify($code, $row['code_hash'])) {
+            // Au 5e mauvais code, le code est détruit : il faut en demander un autre
+            if ((int) $row['attempts'] + 1 >= self::RESET_MAX_ATTEMPTS) {
+                $delete->execute(['id' => $user->getId()]);
+                return [$this->t['err_reset_attempts']];
+            }
+            $this->db->prepare('UPDATE password_reset SET attempts = attempts + 1 WHERE user_id = :id')
+                ->execute(['id' => $user->getId()]);
+            return [$this->t['err_reset_code']];
+        }
+
+        // Code correct : nouveau mot de passe haché, compte débloqué, et toute
+        // session ouverte ailleurs est fermée (session_token remis à NULL).
+        $stmt = $this->db->prepare(
+            'UPDATE utilisateur SET password = :password, failed_attempts = 0,
+                    locked_until = NULL, session_token = NULL WHERE id = :id'
+        );
+        $stmt->execute(['password' => password_hash($new, PASSWORD_DEFAULT), 'id' => $user->getId()]);
+        $delete->execute(['id' => $user->getId()]); // un code ne sert qu'une seule fois
+
+        unset($_SESSION['reset_email'], $_SESSION['reset_sent_at']);
+        session_regenerate_id(true);
         return [];
     }
 

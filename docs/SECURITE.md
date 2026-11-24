@@ -22,6 +22,13 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 | Force brute sur le mot de passe | Après **5 échecs**, compte bloqué **15 minutes**, même avec le bon mot de passe ; compteur remis à zéro après une connexion réussie | `login()`, `recordFailedLogin()`, colonnes `failed_attempts` / `locked_until` |
 | Cookie intercepté sur le réseau | Cookie `Secure` activé automatiquement en HTTPS, `use_only_cookies` (jamais d'identifiant dans l'URL), HSTS en HTTPS | `index.php` |
 | Accès abusif aux capteurs | En-tête `Permissions-Policy` : caméra, micro et géolocalisation interdits | `index.php` |
+| Mot de passe oublié | Code à **6 chiffres** tiré avec `random_int()`, envoyé par email et **valable 5 minutes** (`RESET_CODE_MINUTES`), expiration vérifiée avec l'horloge MySQL (`NOW()`) | `requestResetCode()`, `resetPassword()`, table `password_reset` |
+| Vol du code dans la base | Le code est stocké **haché** avec `password_hash()`, comme un mot de passe | `requestResetCode()` |
+| Force brute sur le code | **5 essais** maximum ; au 5e mauvais code, le code est détruit. Code **à usage unique** : supprimé dès qu'il a servi | `resetPassword()` |
+| Spam d'emails | Un seul envoi par minute pour le même compte | `requestResetCode()` |
+| Découverte des emails inscrits | Même réponse et même compte à rebours, que l'email existe ou non | `forgotPasswordPage()`, `resetPasswordPage()` |
+| Session restée ouverte après le changement | Nouveau mot de passe → `session_token` remis à `NULL` (les sessions ouvertes ailleurs sont fermées) et blocage anti force brute levé | `resetPassword()` |
+| Mot de passe SMTP publié | Identifiants email dans `config/mail.local.php`, ignoré par Git ; sans lui, les emails sont enregistrés dans `storage/mails/` (interdit d'accès) | `config/Mailer.php`, `.gitignore` |
 
 ## Scénarios de test
 
@@ -39,6 +46,10 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 12. Email en double : créer un compte avec un email déjà utilisé : refusé. Supprimer ce compte, puis recréer un compte avec le même email : accepté, avec un nouveau code personnel.
 13. Force brute : saisir 5 fois un mauvais mot de passe pour le même compte ; à la 6e tentative, le message « Trop de tentatives… réessayez dans 15 minute(s) » s'affiche, même avec le bon mot de passe. Dans phpMyAdmin, `locked_until` contient l'heure de déblocage (mettre `NULL` pour débloquer).
 14. En-têtes : F12 > Réseau > une page > En-têtes de réponse : `Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy` et le cookie `PHPSESSID; HttpOnly; SameSite=Lax`.
+15. Mot de passe oublié : sur la page de connexion, « Mot de passe oublié ? », saisir l'email : un code à 6 chiffres est envoyé (en local, fichier `.eml` dans `storage/mails/`). Dans phpMyAdmin, la table `password_reset` contient le code **haché** et `expires_at` = heure d'envoi + **5 minutes**. Saisir le code et un nouveau mot de passe : connexion possible avec le nouveau.
+16. Expiration du code : attendre plus de 5 minutes (le compte à rebours passe au rouge) puis saisir le code : « Ce code a expiré (validité : 5 minutes) ». Pour tester plus vite, mettre `expires_at` dans le passé dans phpMyAdmin.
+17. Code deviné : saisir 5 fois un mauvais code : le code est annulé, même le bon est ensuite refusé. Un code déjà utilisé ne fonctionne pas une deuxième fois.
+18. Email inconnu : demander un code pour `inconnu@test.tn` : même message que pour un vrai compte, aucun email envoyé.
 
 ## Réponses aux questions de réflexion
 
