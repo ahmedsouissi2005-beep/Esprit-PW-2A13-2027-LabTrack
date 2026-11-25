@@ -218,8 +218,8 @@ LabTrack/
 
 | Member | Module |
 |---|---|
-| Aziz | Blood tests |
-| Ismail | Reminders & visits |
+| Aziz | Reminders & visits |
+| Ismail | Blood tests |
 | Fadi | Health news & alerts |
 | Fatma | Medical record |
 | Yassine | "What if…" program |
