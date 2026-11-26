@@ -43,7 +43,8 @@ header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 if ($isHttps) {
     header('Strict-Transport-Security: max-age=31536000'); // HSTS : toujours HTTPS ensuite
 }
-// CSP : scripts uniquement depuis le site (aucun script inline), polices Google autorisées
+// CSP : scripts uniquement depuis le site (aucun script inline), polices Google autorisées.
+// Le QR code de la carte d'urgence est un SVG écrit dans la page : aucune source externe.
 header("Content-Security-Policy: default-src 'self'; script-src 'self'; "
     . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
     . "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; "
@@ -56,6 +57,7 @@ require_once __DIR__ . '/views/helpers.php';
 require_once __DIR__ . '/controllers/Controller.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/AdminController.php';
+require_once __DIR__ . '/controllers/FamilyController.php';
 
 // Une seule connexion à la fois : ferme cette session si le compte
 // s'est connecté ailleurs depuis (ou s'il a été supprimé)

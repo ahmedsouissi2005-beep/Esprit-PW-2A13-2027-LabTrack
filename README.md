@@ -40,7 +40,7 @@ This project was developed as part of the **Web Technologies Project (Projet Web
 | 3 | Health news & alerts | Reliable articles (WHO, Ministry of Health), favourites, alerts (campaigns, screening) | 🚧 In progress |
 | 4 | Medical record | Symptoms, dates, medicines, sleep, food, sport, clear report for the doctor | 🚧 In progress |
 | 5 | "What if…" program | Lifestyle scenarios ("I continue" vs "I change") and a personalised plan, without alarmism | 🚧 In progress |
-| 6 | Family space | Profiles for parents, children and elders, access by consent, messages | 🚧 In progress |
+| 6 | Family space | Invitation by private code, consent, roles, dependent profiles, family calendar, statistics, emergency card with QR code, messages ([details](docs/FAMILY_SPACE.md)) | ✅ Done |
 
 **User management module in detail**
 
@@ -121,6 +121,8 @@ LabTrack/
 
 `password_reset` (forgot password): `user_id` (foreign key), `code_hash` (the 6-digit code, hashed), `expires_at` (sending time + 5 minutes), `attempts` (wrong codes, max 5). Created automatically the first time it is used.
 
+Family space: `famille`, `famille_membre` (account or dependent profile, role, sharing consent), `famille_invitation` (48 h), `famille_message`, `fiche_urgence` (emergency card, QR token), `famille_tentative` (wrong codes). See [docs/FAMILY_SPACE.md](docs/FAMILY_SPACE.md), including the columns the family space reads from the other modules.
+
 ## Getting Started
 
 ### Prerequisites
@@ -181,6 +183,10 @@ LabTrack/
 | `avatar` | Logged-in users | Profile picture of any account (`&id=`), visible to every logged-in member |
 | `admin` | Admin only | Back office dashboard |
 | `admin_users` | Admin only | Search accounts, change a role, delete an account |
+| `family`, `family_view` | Logged-in users | Family space: my families, invitations received, family dashboard (overview, members, calendar, statistics, messages) |
+| `family_card` | Family members | Emergency card of a member, print / PDF, QR code |
+| `urgence` | Everyone (with the QR code) | Public emergency card opened by the QR code (`&t=` random token) |
+| `admin_families` | Admin only | Families, members and statistics (no health data) |
 
 **For the other team members (adding a module):**
 
@@ -188,8 +194,9 @@ LabTrack/
 2. Create your controller (extends `Controller`), your views, then add your route in `config/routes.php`.
 3. Protect your pages with `AuthController::requireAuth();` or `AuthController::requireRole('admin');` (back office).
 4. Use `$_SESSION['user_id']`, `$_SESSION['role']` and `$_SESSION['langue']` for the logged-in user.
-5. Add your texts to `config/lang/fr.php`, `ar.php` and `en.php`, then display `$t['your_key']` in your views.
-6. Add your link in `views/front/includes/navbar.php` and/or `views/back/partials/sidebar.php`.
+5. Add your texts in your own folder `config/lang/<module>/fr.php`, `ar.php` and `en.php` (loaded automatically, like `config/lang/family/`), then display `$t['your_key']` in your views.
+6. If the Family space should show your data, use the column names of [docs/family_modules_contract.sql](docs/family_modules_contract.sql) (`user_id` **or** `membre_id`).
+7. Add your link in `views/front/includes/navbar.php` and/or `views/back/partials/sidebar.php`.
 
 ## Screenshots
 

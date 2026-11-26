@@ -95,10 +95,26 @@ function validationAttrs(array $t): string
         'match'    => 'err_password_match',
         'photo-type' => 'err_photo_type',
         'photo-size' => 'err_photo_size',
+        'tag'        => 'fam_err_tag_format',  // Espace famille : code privé #0427
+        'famille'    => 'fam_err_name',
+        'past-date'  => 'fam_err_birth',
     ];
     $html = 'novalidate data-validate';
     foreach ($messages as $name => $key) {
         $html .= ' data-msg-' . $name . '="' . e($t[$key] ?? '') . '"';
     }
     return $html;
+}
+
+/**
+ * Espace famille : rond d'un membre. La photo du compte s'il en a une, sinon ses
+ * initiales sur la couleur du membre (la même que dans le calendrier et les statistiques).
+ */
+function memberAvatar(MembreModel $member, string $color, string $extraClass = ''): string
+{
+    $class = trim('lt-fam-avatar ' . $extraClass);
+    if ($member->getUserId() !== null && $member->getAvatar() !== null) {
+        return '<img src="' . e(avatarUrl($member->getUserId(), $member->getAvatar())) . '" alt="" class="' . e($class) . '" style="border-color:' . e($color) . '">';
+    }
+    return '<span class="' . e($class) . '" style="background:' . e($color) . '" aria-hidden="true">' . e(initials($member->getNom())) . '</span>';
 }

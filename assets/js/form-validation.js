@@ -23,6 +23,9 @@
   // Même règle que AuthController::updateAvatar (le serveur lit en plus le vrai contenu du fichier)
   var PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+  // Espace famille (mêmes règles que FamilyController) : code privé, nom de famille, date passée
+  var TAG_RE = /^#?\d{4}$/;
+  var FAMILLE_RE = /^[\p{L}\p{N}][\p{L}\p{N}\s'\-]{1,59}$/u;
 
   function messageFor(field, form) {
     var value = field.value.trim();
@@ -50,6 +53,18 @@
         break;
       case 'password':
         if (field.value.length < MIN_PASSWORD) { return msg('length'); }
+        break;
+      case 'tag':
+        if (!TAG_RE.test(value)) { return msg('tag'); }
+        break;
+      case 'famille':
+        if (!FAMILLE_RE.test(value)) { return msg('famille'); }
+        break;
+      case 'past-date':
+        // AAAA-MM-JJ : la comparaison de chaînes suffit ; pas dans le futur, pas plus de 120 ans
+        var today = new Date().toISOString().slice(0, 10);
+        var oldest = (new Date().getFullYear() - 120) + today.slice(4);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value > today || value < oldest) { return msg('past-date'); }
         break;
       case 'photo':
         var file = field.files && field.files[0];
@@ -84,7 +99,7 @@
   }
 
   document.querySelectorAll('form[data-validate]').forEach(function (form) {
-    var fields = form.querySelectorAll('input[required], input[data-rule], input[data-match]');
+    var fields = form.querySelectorAll('input[required], input[data-rule], input[data-match], textarea[required], select[required]');
 
     // Vérification au fil de la saisie, une fois que l'utilisateur a quitté le champ
     fields.forEach(function (field) {

@@ -56,6 +56,97 @@ CREATE TABLE IF NOT EXISTS password_reset (
     CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- ESPACE FAMILLE (Ahmed)
+-- Tables aussi créées automatiquement au premier usage (FamilyController::ensureTables).
+-- Détails et données attendues des autres modules : docs/FAMILY_SPACE.md
+-- ============================================================
+
+-- Une famille : son gestionnaire est le membre de rôle 'manager' (famille_membre)
+CREATE TABLE IF NOT EXISTS famille (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    nom        VARCHAR(60) NOT NULL,
+    created_by INT NULL,                               -- compte qui l'a créée (information)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_famille_user FOREIGN KEY (created_by) REFERENCES utilisateur(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Membres : un compte LabTrack (user_id) OU un profil à charge (user_id NULL, nom + date de naissance).
+-- share_* : consentement du membre (ce que la famille peut voir), modifiable à tout moment.
+-- UNIQUE (famille_id, user_id) : un compte n'est qu'une fois dans une famille.
+CREATE TABLE IF NOT EXISTS famille_membre (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    famille_id     INT NOT NULL,
+    user_id        INT NULL,
+    nom            VARCHAR(100) NULL,
+    relation       VARCHAR(20) NOT NULL DEFAULT 'autre',
+    date_naissance DATE NULL,
+    role           ENUM('manager','caregiver','member') NOT NULL DEFAULT 'member',
+    share_analyses TINYINT(1) NOT NULL DEFAULT 0,
+    share_dossier  TINYINT(1) NOT NULL DEFAULT 0,
+    share_rappels  TINYINT(1) NOT NULL DEFAULT 0,
+    share_rdv      TINYINT(1) NOT NULL DEFAULT 0,
+    joined_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_famille_user (famille_id, user_id),
+    CONSTRAINT fk_membre_famille FOREIGN KEY (famille_id) REFERENCES famille(id) ON DELETE CASCADE,
+    CONSTRAINT fk_membre_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Invitations par nom + code privé, valables 48 h. membre_id : relier un profil à charge au compte invité.
+CREATE TABLE IF NOT EXISTS famille_invitation (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    famille_id      INT NOT NULL,
+    invited_by      INT NOT NULL,
+    invited_user_id INT NOT NULL,
+    membre_id       INT NULL,
+    relation        VARCHAR(20) NOT NULL DEFAULT 'autre',
+    status          ENUM('pending','accepted','refused','expired') NOT NULL DEFAULT 'pending',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at      DATETIME NOT NULL,
+    responded_at    DATETIME NULL,
+    CONSTRAINT fk_inv_famille FOREIGN KEY (famille_id) REFERENCES famille(id) ON DELETE CASCADE,
+    CONSTRAINT fk_inv_by FOREIGN KEY (invited_by) REFERENCES utilisateur(id) ON DELETE CASCADE,
+    CONSTRAINT fk_inv_user FOREIGN KEY (invited_user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
+    CONSTRAINT fk_inv_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Messages privés de la famille
+CREATE TABLE IF NOT EXISTS famille_message (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    famille_id INT NOT NULL,
+    user_id    INT NOT NULL,
+    contenu    TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_msg_famille FOREIGN KEY (famille_id) REFERENCES famille(id) ON DELETE CASCADE,
+    CONSTRAINT fk_msg_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Carte d'urgence : d'un compte (user_id) OU d'un profil à charge (membre_id).
+-- token : 32 caractères aléatoires du QR code (NULL = QR code désactivé).
+CREATE TABLE IF NOT EXISTS fiche_urgence (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT NULL UNIQUE,
+    membre_id       INT NULL UNIQUE,
+    groupe_sanguin  VARCHAR(3) NULL,
+    allergies       TEXT NULL,
+    maladies        TEXT NULL,
+    traitements     TEXT NULL,
+    contact_urgence VARCHAR(150) NULL,
+    token           CHAR(32) NULL UNIQUE,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fiche_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
+    CONSTRAINT fk_fiche_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Codes faux saisis pour inviter (anti devinette) : 5 en 15 minutes = blocage 15 minutes
+CREATE TABLE IF NOT EXISTS famille_tentative (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_tentative (user_id, created_at),
+    CONSTRAINT fk_tentative_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ------------------------------------------------------------
 -- Compte administrateur de test (optionnel)
 -- Email : admin@labtrack.tn  /  Mot de passe : Admin@1234

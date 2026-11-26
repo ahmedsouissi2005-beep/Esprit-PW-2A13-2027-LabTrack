@@ -11,7 +11,7 @@ $modules = [
     ['mod_infos', 'icofont-newspaper'],
     ['mod_dossier', 'icofont-file-document'],
     ['mod_etsi', 'icofont-chart-growth'],
-    ['mod_famille', 'icofont-users-alt-4'],
+    ['mod_famille', 'icofont-users-alt-4', 'family'], // 3e valeur : page du module quand il est disponible
 ];
 ?>
 <!DOCTYPE html>
@@ -71,16 +71,20 @@ $modules = [
                 <h2 class="title-color mb-2"><?= $t['modules_title'] ?></h2>
                 <p class="mb-4"><?= $t['intro_patient'] ?></p>
                 <div class="row">
-                    <?php foreach ($modules as [$key, $icon]): ?>
+                    <?php foreach ($modules as $module): [$key, $icon] = $module; $link = $module[2] ?? null; ?>
                         <div class="col-md-6 mb-4">
-                            <div class="lt-module">
+                            <?php if ($link): ?><a class="lt-module lt-module-link" href="index.php?page=<?= $link ?>"><?php else: ?><div class="lt-module"><?php endif; ?>
                                 <i class="<?= $icon ?>"></i>
                                 <div>
                                     <h5 class="mb-1"><?= $t[$key] ?></h5>
                                     <p class="mb-1"><?= $t[$key . '_desc'] ?></p>
-                                    <span class="lt-soon"><?= $t['soon'] ?></span>
+                                    <?php if ($link): ?>
+                                        <span class="lt-open"><?= $t['fam_open'] ?> <i class="icofont-simple-right"></i></span>
+                                    <?php else: ?>
+                                        <span class="lt-soon"><?= $t['soon'] ?></span>
+                                    <?php endif; ?>
                                 </div>
-                            </div>
+                            <?php if ($link): ?></a><?php else: ?></div><?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

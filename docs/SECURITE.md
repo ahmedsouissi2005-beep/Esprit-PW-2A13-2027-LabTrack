@@ -29,6 +29,12 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 | Découverte des emails inscrits | Même réponse et même compte à rebours, que l'email existe ou non | `forgotPasswordPage()`, `resetPasswordPage()` |
 | Session restée ouverte après le changement | Nouveau mot de passe → `session_token` remis à `NULL` (les sessions ouvertes ailleurs sont fermées) et blocage anti force brute levé | `resetPassword()` |
 | Mot de passe SMTP publié | Identifiants email dans `config/mail.local.php`, ignoré par Git ; sans lui, les emails sont enregistrés dans `storage/mails/` (interdit d'accès) | `config/Mailer.php`, `.gitignore` |
+| Espace famille : accès aux données d'une autre famille | Chaque page vérifie que la famille existe **et** que le compte connecté en fait partie (même réponse sinon), puis son rôle (gestionnaire / aidant / membre) | `FamilyController::requireMembership()` |
+| Espace famille : invitation forcée | Invitation **uniquement** avec le nom + le code privé ; même message pour « code inconnu » et « nom différent » ; l'invité doit **accepter** ; invitation valable **48 h** | `inviteByTag()`, `respondInvitation()` |
+| Espace famille : codes devinés | **5 codes faux en 15 minutes** bloquent les invitations 15 minutes (comme la connexion) | `tagLockSeconds()`, table `famille_tentative` |
+| Espace famille : partage sans accord | Consentement par type de donnée (analyses, dossier, médicaments, rendez-vous), choisi à l'acceptation et modifiable ; les données des autres comptes ne sont lues que si elles sont partagées | `visibleOwners()`, colonnes `share_*` |
+| Carte d'urgence publique (QR code) | Jeton aléatoire de 128 bits (`random_bytes(16)`), page `noindex` / `no-referrer` qui ne montre que les informations d'urgence, jeton renouvelable ou désactivable ; QR code généré en SVG côté serveur (aucun script externe, compatible CSP) | `publicCard()`, `config/QrCode.php` |
+| Admin trop curieux | Le backoffice des familles montre les membres et rôles, jamais les données de santé ni le contenu des messages | `adminFamilies()`, `adminFamily()` |
 
 ## Scénarios de test
 
@@ -50,6 +56,10 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 16. Expiration du code : attendre plus de 5 minutes (le compte à rebours passe au rouge) puis saisir le code : « Ce code a expiré (validité : 5 minutes) ». Pour tester plus vite, mettre `expires_at` dans le passé dans phpMyAdmin.
 17. Code deviné : saisir 5 fois un mauvais code : le code est annulé, même le bon est ensuite refusé. Un code déjà utilisé ne fonctionne pas une deuxième fois.
 18. Email inconnu : demander un code pour `inconnu@test.tn` : même message que pour un vrai compte, aucun email envoyé.
+19. Espace famille, accès : ouvrir `?page=family_view&id=` d'une famille dont on ne fait pas partie : « Famille introuvable », aucune information affichée. Un simple membre qui envoie à la main le formulaire « retirer un membre » : rien ne change.
+20. Invitation : inviter avec un bon code mais un mauvais nom, puis un mauvais code : même message « Aucun compte ne correspond ». Au 6e code faux en 15 minutes : « Trop de codes incorrects », même avec le bon code.
+21. Consentement : B accepte l'invitation en cochant seulement « Médicaments » ; A ne voit pas ses rendez-vous. B coche « Rendez-vous » : ils apparaissent dans le calendrier de A.
+22. QR code : créer le QR code d'une carte d'urgence, ouvrir le lien dans une fenêtre privée (sans connexion) : seule la carte s'affiche. « Désactiver » : le même lien renvoie « Carte introuvable » (404).
 
 ## Réponses aux questions de réflexion
 
