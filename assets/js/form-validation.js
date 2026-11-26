@@ -26,6 +26,10 @@
   // Espace famille (mêmes règles que FamilyController) : code privé, nom de famille, date passée
   var TAG_RE = /^#?\d{4}$/;
   var FAMILLE_RE = /^[\p{L}\p{N}][\p{L}\p{N}\s'\-]{1,59}$/u;
+  // Rappels & visites (mêmes règles que RappelController)
+  var LABEL_RE = /^[\p{L}\p{N}][\p{L}\p{N}\s'’().,+\/%:-]{1,149}$/u;
+  var TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+  var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
   function messageFor(field, form) {
     var value = field.value.trim();
@@ -66,11 +70,26 @@
         var oldest = (new Date().getFullYear() - 120) + today.slice(4);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value > today || value < oldest) { return msg('past-date'); }
         break;
+      case 'label':
+        if (!LABEL_RE.test(value)) { return msg('label'); }
+        break;
+      case 'time':
+        if (!TIME_RE.test(value)) { return msg('time'); }
+        break;
+      case 'date':
+        if (!DATE_RE.test(value) || isNaN(new Date(value).getTime())) { return msg('date'); }
+        break;
       case 'photo':
         var file = field.files && field.files[0];
         if (file && PHOTO_TYPES.indexOf(file.type) === -1) { return msg('photo-type'); }
         if (file && file.size > PHOTO_MAX_BYTES) { return msg('photo-size'); }
         break;
+    }
+    // data-after="id" : la date doit être le même jour ou après celle de l'autre champ (date de fin)
+    var afterId = field.getAttribute('data-after');
+    if (afterId) {
+      var start = form.querySelector('#' + afterId);
+      if (start && start.value !== '' && value < start.value) { return msg('after'); }
     }
     var matchId = field.getAttribute('data-match');
     if (matchId) {

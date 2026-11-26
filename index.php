@@ -58,6 +58,7 @@ require_once __DIR__ . '/controllers/Controller.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/AdminController.php';
 require_once __DIR__ . '/controllers/FamilyController.php';
+require_once __DIR__ . '/controllers/RappelController.php';
 
 // Une seule connexion à la fois : ferme cette session si le compte
 // s'est connecté ailleurs depuis (ou s'il a été supprimé)

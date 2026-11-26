@@ -34,6 +34,9 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 | Espace famille : codes devinés | **5 codes faux en 15 minutes** bloquent les invitations 15 minutes (comme la connexion) | `tagLockSeconds()`, table `famille_tentative` |
 | Espace famille : partage sans accord | Consentement par type de donnée (analyses, dossier, médicaments, rendez-vous), choisi à l'acceptation et modifiable ; les données des autres comptes ne sont lues que si elles sont partagées | `visibleOwners()`, colonnes `share_*` |
 | Carte d'urgence publique (QR code) | Jeton aléatoire de 128 bits (`random_bytes(16)`), page `noindex` / `no-referrer` qui ne montre que les informations d'urgence, jeton renouvelable ou désactivable ; QR code généré en SVG côté serveur (aucun script externe, compatible CSP) | `publicCard()`, `config/QrCode.php` |
+| Rappels : modifier les données d'un autre (IDOR) | Chaque rappel / rendez-vous est relu avec « appartient à moi ou à un profil à charge d'une famille où je suis gestionnaire ou aidant » ; sinon « introuvable », aucune action | `RappelController::findReminder()`, `findAppointment()`, `ownersFor()` |
+| Rappels : prises falsifiées | Une prise ne peut être cochée que pour aujourd'hui ou un jour passé, pendant la durée du traitement ; une seule ligne par jour (`UNIQUE`) ; on garde qui a coché (`coche_par`) | `take()`, table `prise_medicament` |
+| Rappels : secret médical côté admin | Le backoffice n'affiche que des chiffres (rappels, rendez-vous, taux de prises), jamais les médicaments ni les motifs | `RappelController::admin()` |
 | Admin trop curieux | Le backoffice des familles montre les membres et rôles, jamais les données de santé ni le contenu des messages | `adminFamilies()`, `adminFamily()` |
 
 ## Scénarios de test
@@ -60,6 +63,9 @@ Ce document résume comment le module Gestion des utilisateurs applique le works
 20. Invitation : inviter avec un bon code mais un mauvais nom, puis un mauvais code : même message « Aucun compte ne correspond ». Au 6e code faux en 15 minutes : « Trop de codes incorrects », même avec le bon code.
 21. Consentement : B accepte l'invitation en cochant seulement « Médicaments » ; A ne voit pas ses rendez-vous. B coche « Rendez-vous » : ils apparaissent dans le calendrier de A.
 22. QR code : créer le QR code d'une carte d'urgence, ouvrir le lien dans une fenêtre privée (sans connexion) : seule la carte s'affiche. « Désactiver » : le même lien renvoie « Carte introuvable » (404).
+23. Rappels, accès : avec un autre compte, ouvrir `?page=rappel_form&id=` d'un rappel qui n'est pas à lui : « Élément introuvable ». Envoyer à la main le formulaire « Pris » ou « Supprimer » avec cet id : rien ne change en base.
+24. Rappels, validation : heure `25:99`, date de fin avant la date de début, nom de médicament vide : refusés en JavaScript, et aussi en PHP si on désactive le JavaScript.
+25. Rendez-vous : en créer un dans moins de 24 h puis rouvrir la page Rappels : un email de rappel est envoyé une seule fois (`rappel_envoye = 1`). Changer la date : il sera renvoyé. Annulé : il disparaît du calendrier de l'Espace famille.
 
 ## Réponses aux questions de réflexion
 

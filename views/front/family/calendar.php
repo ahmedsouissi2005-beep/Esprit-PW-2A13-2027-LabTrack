@@ -64,6 +64,9 @@ foreach ($members as $m) {
     </div>
     <?php if (!$modules['rdv'] && !$modules['rappels']): ?>
         <p class="lt-note mt-3 mb-0"><i class="icofont-plugin mr-1"></i><?= $t['fam_cal_waiting'] ?></p>
+    <?php elseif (isset($t['rap_nav'])): ?>
+        <!-- Module Rappels & visites : ajouter ou cocher les rappels de soi et des profils à charge -->
+        <p class="mt-3 mb-0"><a class="btn btn-sm btn-outline-primary btn-round-full" href="index.php?page=rappels"><i class="icofont-pills mr-1"></i><?= $t['fam_manage_reminders'] ?></a></p>
     <?php endif; ?>
 </div>
 

@@ -863,6 +863,21 @@ class FamilyController extends Controller
         return $this->tableCache[$name];
     }
 
+    /**
+     * Rendez-vous annulés exclus (colonne statut du module Rappels & visites, si elle existe).
+     * Retourne un morceau de SQL fixe, sans aucune donnée de l'utilisateur.
+     */
+    private function rdvActive(string $alias = ''): string
+    {
+        if (!array_key_exists('rdv_statut', $this->tableCache)) {
+            $this->tableCache['rdv_statut'] = $this->scalar(
+                "SELECT COUNT(*) FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'rendez_vous' AND column_name = 'statut'"
+            ) > 0;
+        }
+        return $this->tableCache['rdv_statut'] ? ' AND ' . ($alias !== '' ? $alias . '.' : '') . "statut <> 'annule'" : '';
+    }
+
     /** Modules branchés (pour expliquer à l'utilisateur ce qui n'est pas encore disponible) */
     private function moduleStatus(): array
     {
@@ -932,7 +947,7 @@ class FamilyController extends Controller
         if ($this->hasTable('rendez_vous') && ($where = $this->ownerWhere($visible['rdv']))) {
             $stmt = $this->db->prepare(
                 "SELECT id, user_id, membre_id, titre, date_rdv, lieu FROM rendez_vous
-                 WHERE $where AND date_rdv BETWEEN :a AND :b ORDER BY date_rdv"
+                 WHERE $where AND date_rdv BETWEEN :a AND :b" . $this->rdvActive() . " ORDER BY date_rdv"
             );
             $stmt->execute(['a' => $start->format('Y-m-d 00:00:00'), 'b' => $end->format('Y-m-d 23:59:59')]);
             foreach ($stmt->fetchAll() as $row) {
@@ -981,7 +996,7 @@ class FamilyController extends Controller
         }
         $stmt = $this->db->query(
             "SELECT user_id, membre_id, titre, date_rdv, lieu, medecin FROM rendez_vous
-             WHERE $where AND date_rdv BETWEEN NOW() AND NOW() + INTERVAL " . (int) $days . ' DAY ORDER BY date_rdv LIMIT 20'
+             WHERE $where AND date_rdv BETWEEN NOW() AND NOW() + INTERVAL " . (int) $days . ' DAY' . $this->rdvActive() . ' ORDER BY date_rdv LIMIT 20'
         );
         $out = [];
         foreach ($stmt->fetchAll() as $row) {
@@ -1110,7 +1125,7 @@ class FamilyController extends Controller
         }
         if ($this->hasTable('rendez_vous') && ($where = $this->ownerWhere($visible['rdv']))) {
             $rows = $this->db->query("SELECT user_id, membre_id, titre, date_rdv FROM rendez_vous
-                WHERE $where AND date_rdv >= NOW() ORDER BY date_rdv LIMIT 200")->fetchAll();
+                WHERE $where AND date_rdv >= NOW()" . $this->rdvActive() . " ORDER BY date_rdv LIMIT 200")->fetchAll();
             foreach ($rows as $row) {
                 $mid = $this->ownerMemberId($visible['rdv'], $row);
                 if ($mid !== null && $out[$mid]['next_rdv'] === null) {

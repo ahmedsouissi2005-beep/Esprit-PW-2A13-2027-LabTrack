@@ -36,7 +36,7 @@ This project was developed as part of the **Web Technologies Project (Projet Web
 |---|---|---|---|
 | — | **User management** | Accounts, roles (patient, admin), preferred language, profile, admin back office | ✅ Done |
 | 1 | Blood tests | Results explained simply in Arabic and French, comparison of two reports, questions to ask the doctor | 🚧 In progress |
-| 2 | Reminders & visits | Medication schedules and medical appointments, shared with the family | 🚧 In progress |
+| 2 | Reminders & visits | Medicine reminders with doses ticked "taken / missed", appointments with email reminder, 30-day tracking, printable medication plan, for yourself and the family's dependent profiles | ✅ Done |
 | 3 | Health news & alerts | Reliable articles (WHO, Ministry of Health), favourites, alerts (campaigns, screening) | 🚧 In progress |
 | 4 | Medical record | Symptoms, dates, medicines, sleep, food, sport, clear report for the doctor | 🚧 In progress |
 | 5 | "What if…" program | Lifestyle scenarios ("I continue" vs "I change") and a personalised plan, without alarmism | 🚧 In progress |
@@ -121,6 +121,8 @@ LabTrack/
 
 `password_reset` (forgot password): `user_id` (foreign key), `code_hash` (the 6-digit code, hashed), `expires_at` (sending time + 5 minutes), `attempts` (wrong codes, max 5). Created automatically the first time it is used.
 
+Reminders & visits: `rappel_medicament` (medicine, dose, time, start/end dates), `prise_medicament` (one row per reminder and day: taken / missed, who ticked it), `rendez_vous` (reason, date, doctor, place, status planned / done / cancelled, email reminder sent). Each row belongs to an account (`user_id`) or a dependent profile (`membre_id`).
+
 Family space: `famille`, `famille_membre` (account or dependent profile, role, sharing consent), `famille_invitation` (48 h), `famille_message`, `fiche_urgence` (emergency card, QR token), `famille_tentative` (wrong codes). See [docs/FAMILY_SPACE.md](docs/FAMILY_SPACE.md), including the columns the family space reads from the other modules.
 
 ## Getting Started
@@ -183,6 +185,10 @@ Family space: `famille`, `famille_membre` (account or dependent profile, role, s
 | `avatar` | Logged-in users | Profile picture of any account (`&id=`), visible to every logged-in member |
 | `admin` | Admin only | Back office dashboard |
 | `admin_users` | Admin only | Search accounts, change a role, delete an account |
+| `rappels` | Logged-in users | Reminders & visits: today's doses, medicines, appointments (search), 30-day history (`&tab=`, `&owner=`) |
+| `rappel_form`, `rdv_form` | Logged-in users | Add or edit a medicine reminder / an appointment, for yourself or a dependent profile you manage |
+| `rappels_print` | Logged-in users | Printable medication plan with boxes to tick for the week |
+| `admin_rappels` | Admin only | Reminders and appointments: numbers only (no medicine names) |
 | `family`, `family_view` | Logged-in users | Family space: my families, invitations received, family dashboard (overview, members, calendar, statistics, messages) |
 | `family_card` | Family members | Emergency card of a member, print / PDF, QR code |
 | `urgence` | Everyone (with the QR code) | Public emergency card opened by the QR code (`&t=` random token) |

@@ -7,7 +7,7 @@
 $role = $user->getRole();
 $modules = [
     ['mod_analyses', 'icofont-blood'],
-    ['mod_rappels', 'icofont-pills'],
+    ['mod_rappels', 'icofont-pills', 'rappels'],
     ['mod_infos', 'icofont-newspaper'],
     ['mod_dossier', 'icofont-file-document'],
     ['mod_etsi', 'icofont-chart-growth'],

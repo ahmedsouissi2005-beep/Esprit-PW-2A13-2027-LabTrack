@@ -147,6 +147,63 @@ CREATE TABLE IF NOT EXISTS famille_tentative (
     CONSTRAINT fk_tentative_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- RAPPELS & VISITES
+-- Tables aussi créées automatiquement au premier usage (RappelController::ensureTables).
+-- Propriétaire de chaque ligne : un compte (user_id) OU un profil à charge de l'Espace
+-- famille (membre_id). L'Espace famille lit ces tables (calendrier, statistiques, alertes).
+-- ============================================================
+
+-- Rendez-vous médicaux. statut : prévu, fait ou annulé (un rendez-vous annulé n'apparaît plus
+-- dans le calendrier familial). rappel_envoye : email de rappel déjà envoyé (24 h avant).
+CREATE TABLE IF NOT EXISTS rendez_vous (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT NULL,
+    membre_id     INT NULL,
+    titre         VARCHAR(150) NOT NULL,
+    date_rdv      DATETIME NOT NULL,
+    lieu          VARCHAR(150) NULL,
+    medecin       VARCHAR(100) NULL,
+    note          VARCHAR(500) NULL,
+    statut        ENUM('prevu','fait','annule') NOT NULL DEFAULT 'prevu',
+    rappel_envoye TINYINT(1) NOT NULL DEFAULT 0,
+    created_by    INT NULL,                                -- compte qui l'a saisi (soi-même ou un aidant)
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_rdv_date (date_rdv),
+    CONSTRAINT fk_rdv_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rdv_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Rappels de médicaments : une heure par jour, entre date_debut et date_fin (NULL = sans fin)
+CREATE TABLE IF NOT EXISTS rappel_medicament (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NULL,
+    membre_id  INT NULL,
+    medicament VARCHAR(100) NOT NULL,
+    dose       VARCHAR(50) NULL,
+    heure      TIME NOT NULL,
+    date_debut DATE NOT NULL,
+    date_fin   DATE NULL,
+    note       VARCHAR(200) NULL,                          -- consigne : "pendant le repas"
+    created_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_rappel_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rappel_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Prises cochées : une ligne par rappel et par jour (UNIQUE), "pris" ou "oublié".
+-- Une prise dont l'heure est passée sans ligne compte comme oubliée.
+CREATE TABLE IF NOT EXISTS prise_medicament (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    rappel_id  INT NOT NULL,
+    date_prise DATE NOT NULL,
+    statut     ENUM('pris','oublie') NOT NULL DEFAULT 'pris',
+    pris_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,        -- moment où la case a été cochée
+    coche_par  INT NULL,                                   -- compte qui a coché (le patient ou un aidant)
+    UNIQUE KEY uq_prise (rappel_id, date_prise),
+    CONSTRAINT fk_prise_rappel FOREIGN KEY (rappel_id) REFERENCES rappel_medicament(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ------------------------------------------------------------
 -- Compte administrateur de test (optionnel)
 -- Email : admin@labtrack.tn  /  Mot de passe : Admin@1234

@@ -18,7 +18,9 @@
 
 USE labtrack;
 
--- Module "Rappels & visites" (Aziz) : rendez-vous -> calendrier, alertes, cartes des membres
+-- Module "Rappels & visites" : DÉJÀ FAIT (branche feature/reminders-visits, RappelController).
+-- Les 3 tables ci-dessous sont dans database.sql avec leurs colonnes complètes (statut, note...).
+-- rendez-vous -> calendrier, alertes, cartes des membres
 CREATE TABLE IF NOT EXISTS rendez_vous (
     id        INT AUTO_INCREMENT PRIMARY KEY,
     user_id   INT NULL,
