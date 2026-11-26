@@ -98,6 +98,10 @@ function validationAttrs(array $t): string
         'tag'        => 'fam_err_tag_format',  // Espace famille : code privé #0427
         'famille'    => 'fam_err_name',
         'past-date'  => 'fam_err_birth',
+        'label'      => 'rap_err_label',       // Rappels & visites : médicament, titre, lieu, médecin
+        'time'       => 'rap_err_time',
+        'date'       => 'rap_err_date',
+        'after'      => 'rap_err_end',
     ];
     $html = 'novalidate data-validate';
     foreach ($messages as $name => $key) {

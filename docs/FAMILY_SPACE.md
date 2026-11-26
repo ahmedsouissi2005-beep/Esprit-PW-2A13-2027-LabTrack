@@ -37,7 +37,7 @@ The family space **does not store** appointments, medicines or test results: it 
 
 | Member | Table | Columns read by the family space | Used for |
 |---|---|---|---|
-| Aziz – Reminders & visits | `rendez_vous` | `user_id`, `membre_id`, `titre`, `date_rdv`, `lieu`, `medecin` | Calendar, upcoming list, alerts, member cards |
+| Aziz – Reminders & visits (**done**, `RappelController`) | `rendez_vous` | `user_id`, `membre_id`, `titre`, `date_rdv`, `lieu`, `medecin` | Calendar, upcoming list, alerts, member cards |
 | Aziz – Reminders & visits | `rappel_medicament` | `user_id`, `membre_id`, `medicament`, `dose`, `heure`, `date_debut`, `date_fin` | Calendar, statistics, alerts |
 | Aziz – Reminders & visits | `prise_medicament` | `rappel_id`, `date_prise`, `statut` ('pris' / 'oublie') | Statistics (taken vs missed), "not ticked yet" alert |
 | Ismail – Blood tests | `bilan_sanguin` | `user_id`, `membre_id`, `titre`, `date_bilan`, `hors_norme` (0/1) | Calm alert to caregivers |

@@ -163,11 +163,11 @@ class AuthController extends Controller
         }
         // Liste blanche des pages de retour : pas de redirection libre
         $allowedBack = ['home', 'login', 'register', 'forgot_password', 'reset_password', 'dashboard', 'profile', 'admin', 'admin_users',
-            'family', 'family_view', 'family_member', 'family_card', 'urgence'];
+            'family', 'family_view', 'family_member', 'family_card', 'urgence', 'rappels', 'rappel_form', 'rdv_form', 'rappels_print'];
         $back = in_array($_POST['back'] ?? '', $allowedBack, true) ? $_POST['back'] : 'home';
         // Paramètres de la page d'origine (famille, onglet, membre, mois...) : chacun revérifié
         parse_str((string) ($_POST['back_query'] ?? ''), $query);
-        $rules = ['id' => '/^\d{1,10}$/', 'member' => '/^\d{1,10}$/', 'tab' => '/^[a-z]{1,20}$/',
+        $rules = ['id' => '/^\d{1,10}$/', 'member' => '/^\d{1,10}$/', 'tab' => '/^[a-z]{1,20}$/', 'owner' => '/^[um]\d{1,10}$/',
                   'm' => '/^\d{4}-\d{2}$/', 't' => '/^[a-f0-9]{32}$/'];
         $safe = [];
         foreach ($rules as $key => $regex) {

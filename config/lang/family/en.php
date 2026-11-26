@@ -116,6 +116,7 @@ return [
     'fam_cal_med'           => 'Medicines',
     'fam_cal_doses'         => '%d dose(s)',
     'fam_cal_waiting'       => 'The “Reminders & visits” module is not installed yet: the calendar will fill in automatically once it is.',
+    'fam_manage_reminders'  => 'Manage medicines and appointments',
     'fam_upcoming_title'    => 'Upcoming appointments (14 days)',
     'fam_no_upcoming'       => 'No appointment in the next 14 days.',
     'fam_dow_1' => 'Mon', 'fam_dow_2' => 'Tue', 'fam_dow_3' => 'Wed', 'fam_dow_4' => 'Thu',

@@ -122,6 +122,7 @@ return [
     'fam_cal_med'           => 'Médicaments',
     'fam_cal_doses'         => '%d prise(s)',
     'fam_cal_waiting'       => 'Le module « Rappels & visites » n’est pas encore installé : le calendrier se remplira automatiquement dès qu’il le sera.',
+    'fam_manage_reminders'  => 'Gérer les médicaments et rendez-vous',
     'fam_upcoming_title'    => 'Prochains rendez-vous (14 jours)',
     'fam_no_upcoming'       => 'Aucun rendez-vous dans les 14 prochains jours.',
     'fam_dow_1' => 'Lun', 'fam_dow_2' => 'Mar', 'fam_dow_3' => 'Mer', 'fam_dow_4' => 'Jeu',

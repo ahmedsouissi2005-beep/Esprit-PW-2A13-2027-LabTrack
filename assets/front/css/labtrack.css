@@ -309,3 +309,108 @@ body { color: var(--lt-brown); }
   .col-lg-7 { flex: 0 0 100%; max-width: 100%; }
   .lt-urgence { box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ==========================================================================
+   Rappels & visites
+   ========================================================================== */
+.lt-owner { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 12px;
+  color: var(--c); background: color-mix(in srgb, var(--c) 12%, #fff); vertical-align: middle; white-space: nowrap; }
+.lt-owner::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.lt-owner-filter select { min-width: 220px; height: 36px !important; }
+.lt-empty { text-align: center; padding: 28px 10px; color: #6F665F; }
+.lt-empty i { font-size: 42px; color: #c9d6cf; display: block; margin-bottom: 8px; }
+.lt-progress-pill { background: var(--lt-green-light); color: #23724A; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 20px; }
+
+/* Prochain rendez-vous */
+.lt-next-rdv { display: flex; align-items: center; gap: 18px; background: linear-gradient(90deg, var(--lt-navy), #2b5486); color: #fff;
+  border-radius: 12px; padding: 16px 20px; box-shadow: 0 6px 24px rgba(30, 58, 95, .18); }
+.lt-next-rdv h4 { color: #fff; }
+.lt-next-rdv small { opacity: .85; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+.lt-next-rdv .lt-owner { background: rgba(255, 255, 255, .9); }
+.lt-next-rdv-date { width: 62px; height: 62px; border-radius: 10px; background: #fff; color: var(--lt-navy); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; line-height: 1.1; flex: none; }
+.lt-next-rdv-date strong { font-size: 24px; }
+.lt-next-rdv-date span { font-size: 11px; text-transform: uppercase; }
+.lt-next-rdv-badge { background: var(--lt-green); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+@media (max-width: 575px) { .lt-next-rdv { flex-wrap: wrap; } }
+
+/* Prises du jour */
+.lt-dose { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px;
+  background: #fafbfa; border-inline-start: 4px solid #cfd8d3; }
+.lt-dose-time { font-weight: 800; font-size: 18px; color: var(--lt-navy); font-variant-numeric: tabular-nums; min-width: 56px; }
+.lt-dose-text { flex: 1; min-width: 160px; }
+.lt-dose-text strong { color: var(--lt-navy); }
+.lt-dose-state { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.lt-dose-pris { border-color: var(--lt-green); background: var(--lt-green-light); }
+.lt-dose-pris .lt-dose-state { color: #23724A; }
+.lt-dose-oublie { border-color: var(--lt-terracotta); background: var(--lt-terracotta-light); }
+.lt-dose-oublie .lt-dose-state { color: var(--lt-terracotta); }
+.lt-dose-late { border-color: #E3A52A; background: #FFF6E5; }
+.lt-dose-late .lt-dose-state { color: #8a5a00; }
+.lt-dose-upcoming .lt-dose-state { color: #6F665F; }
+.lt-undo { font-size: 13px; color: #6F665F; }
+
+/* Cartes médicaments */
+.lt-med { height: 100%; background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 4px 18px rgba(30, 58, 95, .06); border-top: 4px solid var(--lt-green);
+  display: flex; flex-direction: column; }
+.lt-med.is-finished { opacity: .65; border-top-color: #b9b2ab; }
+.lt-med-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.lt-med-head h5 { color: var(--lt-navy); }
+.lt-med-icon { width: 42px; height: 42px; border-radius: 50%; background: var(--lt-green-light); color: var(--lt-green); display: flex; align-items: center;
+  justify-content: center; font-size: 20px; flex: none; }
+.lt-med-time { margin-inline-start: auto; font-weight: 800; color: var(--lt-navy); background: var(--lt-gray); padding: 4px 10px; border-radius: 8px; }
+.lt-med-info { flex: 1; font-size: 13px; }
+.lt-med-info li { display: flex; gap: 8px; padding: 3px 0; }
+.lt-med-info i { color: var(--lt-green); }
+
+/* Rendez-vous */
+.lt-search { max-width: 520px; }
+.lt-rdv { display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px;
+  box-shadow: 0 4px 18px rgba(30, 58, 95, .06); }
+.lt-rdv.is-past { background: #fafafa; box-shadow: none; border: 1px solid #eee; }
+.lt-rdv-date { width: 60px; flex: none; text-align: center; border-radius: 10px; background: var(--lt-green-light); color: var(--lt-navy); padding: 6px 0; line-height: 1.1; }
+.lt-rdv.is-past .lt-rdv-date { background: #eee; }
+.lt-rdv-date strong { display: block; font-size: 22px; }
+.lt-rdv-date span { display: block; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+.lt-rdv-date small { font-size: 10px; color: #6F665F; }
+.lt-rdv-text { flex: 1; min-width: 0; }
+.lt-rdv-text h5 { color: var(--lt-navy); }
+.lt-rdv-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: #6F665F; }
+.lt-rdv-meta i { color: var(--lt-green); margin-inline-end: 4px; }
+.lt-rdv-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.lt-rdv-actions { display: flex; gap: 6px; align-items: center; }
+.lt-st { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+.lt-st-prevu { background: #E6EEF7; color: var(--lt-navy); }
+.lt-st-fait { background: var(--lt-green-light); color: #23724A; }
+.lt-st-annule { background: #f1f1f1; color: #888; text-decoration: line-through; }
+@media (max-width: 767px) { .lt-rdv { flex-wrap: wrap; } .lt-rdv-side { flex-direction: row; width: 100%; justify-content: space-between; } }
+
+/* Historique : frise des 14 derniers jours */
+.lt-days { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; }
+.lt-day-form { margin: 0; display: inline; }
+.lt-day { width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  border: 0; padding: 0; color: #fff; }
+button.lt-day { cursor: pointer; }
+button.lt-day:hover { outline: 2px solid var(--lt-navy); }
+.lt-day-pris { background: var(--lt-green); }
+.lt-day-oublie { background: var(--lt-terracotta); }
+.lt-day-none { background: #e4e8e5; color: #8a958f; }
+.lt-day-upcoming { background: #fff; color: var(--lt-navy); border: 2px dashed #b9c7bf; }
+
+/* Plan de prise imprimable */
+.lt-plan { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 6px 30px rgba(30, 58, 95, .08); }
+.lt-plan-head { display: flex; align-items: center; gap: 24px; border-bottom: 3px solid var(--lt-green); padding-bottom: 14px; margin-bottom: 10px; }
+.lt-plan-head h2 { color: var(--lt-navy); font-size: 26px; }
+.lt-plan-moment { color: var(--lt-green); margin: 22px 0 8px; font-size: 18px; }
+.lt-plan-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.lt-plan-table th, .lt-plan-table td { border: 1px solid #dfe5e1; padding: 8px; vertical-align: middle; }
+.lt-plan-table th { background: var(--lt-gray); color: var(--lt-navy); font-size: 12px; text-transform: uppercase; }
+.lt-plan-day { width: 44px; text-align: center; }
+.lt-plan-box { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--lt-navy); border-radius: 4px; }
+.lt-plan-rdv { padding-inline-start: 18px; }
+.lt-plan-foot { margin: 20px 0 0; font-size: 12px; color: #8a817a; text-align: center; }
+@media print {
+  .lt-print-page .section { padding: 0 !important; }
+  .lt-plan { box-shadow: none; padding: 0; }
+  .lt-plan-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -17,6 +17,16 @@ return [
     'set_lang'     => ['AuthController', 'changeLang'],
     'avatar'       => ['AuthController', 'avatar'],      // photo de profil (servie par PHP)
 
+    // ---------------- RAPPELS & VISITES ----------------
+    'rappels'       => ['RappelController', 'home'],              // aujourd'hui, médicaments, rendez-vous, historique (?tab=)
+    'rappel_form'   => ['RappelController', 'reminderForm'],      // rappel de médicament : ajout / modification (?id=)
+    'rappel_delete' => ['RappelController', 'deleteReminder'],
+    'rappel_take'   => ['RappelController', 'take'],              // POST : prise cochée "pris" / "oublié"
+    'rdv_form'      => ['RappelController', 'appointmentForm'],   // rendez-vous : ajout / modification (?id=)
+    'rdv_status'    => ['RappelController', 'appointmentStatus'], // POST : fait / annulé / prévu
+    'rdv_delete'    => ['RappelController', 'deleteAppointment'],
+    'rappels_print' => ['RappelController', 'printPlan'],         // plan de prise imprimable (?owner=)
+
     // ---------------- ESPACE FAMILLE (Ahmed) ----------------
     'family'             => ['FamilyController', 'familyHome'],       // mes familles, invitations reçues, créer
     'family_view'        => ['FamilyController', 'familyView'],       // tableau de bord (?id=&tab=)
@@ -40,6 +50,7 @@ return [
     'admin_user_form' => ['AdminController', 'userForm'], // ajout (sans id) ou modification (?id=)
     'admin_role'   => ['AdminController', 'updateRole'],
     'admin_delete' => ['AdminController', 'deleteUser'],
+    'admin_rappels'       => ['RappelController', 'admin'],          // rappels et rendez-vous : chiffres globaux
     'admin_families'      => ['FamilyController', 'adminFamilies'],   // familles : liste, recherche, statistiques
     'admin_family'        => ['FamilyController', 'adminFamily'],     // membres d'une famille (sans données de santé)
     'admin_family_delete' => ['FamilyController', 'adminDeleteFamily'],

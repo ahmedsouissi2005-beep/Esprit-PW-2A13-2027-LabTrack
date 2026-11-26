@@ -43,10 +43,11 @@ $icon = [
             <!-- Les autres modules de LabTrack seront ajoutés ici par chaque membre du groupe -->
             <p class="nav-heading"><?= $t['menu_modules'] ?></p>
             <ul class="nav-list">
-                <?php foreach (['mod_analyses', 'mod_rappels', 'mod_infos', 'mod_dossier', 'mod_etsi'] as $module): ?>
+                <?php foreach (['mod_analyses', 'mod_infos', 'mod_dossier', 'mod_etsi'] as $module): ?>
                     <li><span class="nav-item-link lt-nav-soon" title="<?= $t['soon'] ?>"><?= $icon['module'] ?><span class="nav-label"><?= $t[$module] ?></span></span></li>
                 <?php endforeach; ?>
-                <!-- Espace famille (Ahmed) : disponible -->
+                <!-- Modules disponibles -->
+                <li><a class="nav-item-link <?= isActive('admin_rappels', $currentPage) ?>" href="index.php?page=admin_rappels" <?= ariaCurrent('admin_rappels', $currentPage) ?>><?= $icon['module'] ?><span class="nav-label"><?= $t['mod_rappels'] ?></span></a></li>
                 <li><a class="nav-item-link <?= isActive('admin_families', $currentPage) ?>" href="index.php?page=admin_families" <?= ariaCurrent('admin_families', $currentPage) ?>><?= $icon['users'] ?><span class="nav-label"><?= $t['mod_famille'] ?></span></a></li>
             </ul>
 
