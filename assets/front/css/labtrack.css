@@ -157,3 +157,155 @@ body { color: var(--lt-brown); }
 .lt-countdown.is-over { background: #fdecea; border-color: #f5b5ae; color: #a12a1e; }
 .lt-countdown.is-over .lt-countdown-running { display: none; }
 .lt-countdown.is-over .lt-countdown-over { display: inline; }
+
+/* ==========================================================================
+   Espace famille (Ahmed)
+   ========================================================================== */
+.lt-gap { gap: 10px; }
+.lt-card-compact { padding: 24px; }
+.lt-module-link { color: inherit; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+.lt-module-link:hover { color: inherit; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30, 58, 95, .12); }
+.lt-open { font-size: 12px; font-weight: 700; color: var(--lt-green); }
+
+/* Onglets */
+.lt-fam-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid #e6ebe8; }
+.lt-fam-tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px 8px 0 0;
+  color: var(--lt-navy); font-weight: 600; font-size: 14px; margin-bottom: -2px; border-bottom: 2px solid transparent; }
+.lt-fam-tabs a:hover { background: var(--lt-gray); color: var(--lt-navy); }
+.lt-fam-tabs a.active { color: var(--lt-green); border-bottom-color: var(--lt-green); background: #fff; }
+.lt-fam-tabs i { font-size: 18px; }
+@media (max-width: 575px) { .lt-fam-tabs a span { display: none; } .lt-fam-tabs a i { font-size: 22px; } }
+
+/* Liste "mes familles" */
+.lt-fam-row { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 12px; background: #fff;
+  border-radius: 10px; box-shadow: 0 4px 18px rgba(30, 58, 95, .06); color: var(--lt-brown); border-inline-start: 4px solid var(--lt-green); }
+.lt-fam-row:hover { color: var(--lt-brown); box-shadow: 0 8px 24px rgba(30, 58, 95, .12); }
+.lt-fam-row-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--lt-green-light); color: var(--lt-green);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.lt-fam-row-text { flex: 1; display: flex; flex-direction: column; }
+.lt-fam-row-text strong { color: var(--lt-navy); }
+.lt-fam-row-text small { color: #6F665F; }
+[dir="rtl"] .lt-fam-row .icofont-simple-right { transform: scaleX(-1); }
+.lt-fam-howto { background: var(--lt-gray); border-radius: 10px; padding: 18px 20px; font-size: 14px; }
+.lt-fam-howto ol { padding-inline-start: 18px; }
+.lt-fam-invite { border-top-color: var(--lt-terracotta); }
+.lt-fam-expire { font-size: 13px; color: var(--lt-terracotta); font-weight: 600; }
+
+/* Rôles et badges */
+.lt-fam-role { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.lt-fam-role-manager { background: var(--lt-terracotta-light); color: var(--lt-terracotta); }
+.lt-fam-role-caregiver { background: #E6EEF7; color: var(--lt-navy); }
+.lt-fam-role-member { background: var(--lt-green-light); color: #23724A; }
+.lt-fam-dep { color: #8E5CB5; font-weight: 600; }
+
+/* Choix de partage (consentement) */
+.lt-fam-shares { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.lt-fam-check { display: inline-flex; align-items: center; gap: 6px; font-weight: 500 !important; color: var(--lt-brown) !important; margin: 0; cursor: pointer; }
+.lt-fam-check input { width: 18px; height: 18px; accent-color: var(--lt-green); }
+.lt-fam-share-icons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.lt-fam-share-icons span { font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+.lt-fam-share-icons .on { background: var(--lt-green-light); color: #23724A; }
+.lt-fam-share-icons .off { background: #f1f1f1; color: #999; text-decoration: line-through; }
+
+/* Avatars des membres */
+.lt-fam-avatar { width: 52px; height: 52px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 18px; object-fit: cover; border: 3px solid transparent; }
+.lt-fam-avatar-sm { width: 38px; height: 38px; font-size: 14px; border-width: 2px; }
+
+/* Cartes des membres (aperçu) */
+.lt-fam-member { height: 100%; background: #fff; border-radius: 10px; padding: 20px; border-top: 4px solid; box-shadow: 0 4px 18px rgba(30, 58, 95, .06); }
+.lt-fam-member-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.lt-fam-member-head h5 { color: var(--lt-navy); }
+.lt-fam-member-info li { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; font-size: 14px; border-bottom: 1px dashed #eee; }
+.lt-fam-member-info i { color: var(--lt-green); }
+
+/* Lignes (membres, invitations, rendez-vous) */
+.lt-fam-line { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.lt-fam-line:last-of-type { border-bottom: 0; }
+.lt-fam-line-text { flex: 1; min-width: 0; }
+.lt-fam-line-text strong { color: var(--lt-navy); }
+.lt-fam-line-actions { display: flex; align-items: center; gap: 6px; }
+.lt-inline-form { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.lt-fam-select { width: auto; height: 32px !important; padding: 2px 8px; font-size: 13px; }
+.lt-tag-input { letter-spacing: .15em; font-variant-numeric: tabular-nums; }
+
+/* Alertes */
+.lt-fam-alert { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+.lt-fam-alert i { font-size: 18px; margin-top: 1px; }
+.lt-fam-alert-warning { background: #FFF6E5; color: #8a5a00; }
+.lt-fam-alert-info { background: #E6EEF7; color: var(--lt-navy); }
+.lt-fam-alert-neutral { background: var(--lt-gray); color: var(--lt-brown); }
+
+/* Calendrier */
+.lt-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+[dir="rtl"] .lt-cal-head .icofont-simple-left, [dir="rtl"] .lt-cal-head .icofont-simple-right { display: inline-block; transform: scaleX(-1); }
+.lt-cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; margin-bottom: 12px; }
+.lt-cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lt-cal-legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.lt-cal-legend-type b { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+.lt-cal-dot-rdv { background: #fff; border: 2px solid var(--lt-navy); border-inline-start-width: 5px; }
+.lt-cal-dot-med { background: #9a918a; width: 8px !important; height: 8px !important; border-radius: 50% !important; }
+.lt-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.lt-cal-dow { text-align: center; font-size: 12px; font-weight: 700; color: var(--lt-navy); padding: 4px 0; }
+.lt-cal-day { min-height: 92px; background: #fafbfa; border: 1px solid #eef1ef; border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.lt-cal-empty { background: transparent; border: 0; }
+.lt-cal-day.is-today { border-color: var(--lt-green); background: var(--lt-green-light); }
+.lt-cal-num { font-size: 12px; font-weight: 700; color: var(--lt-navy); }
+.lt-cal-event { display: block; font-size: 11px; line-height: 1.3; background: #fff; border-inline-start: 4px solid; border-radius: 3px; padding: 2px 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+.lt-cal-meds { font-size: 11px; color: #6F665F; display: flex; align-items: center; gap: 2px; cursor: default; }
+.lt-cal-meds i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.lt-cal-swatch { width: 6px; align-self: stretch; border-radius: 3px; }
+@media (max-width: 767px) { .lt-cal-day { min-height: 56px; } .lt-cal-event { font-size: 0; height: 6px; padding: 0; } }
+
+/* Statistiques */
+.lt-stat-big { font-size: 56px; font-weight: 800; color: var(--lt-green); line-height: 1.1; margin: 8px 0; }
+.lt-bar-row { margin-bottom: 18px; }
+.lt-bar-label { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.lt-bar { display: flex; height: 14px; border-radius: 7px; background: #eef1ef; overflow: hidden; }
+.lt-bar-taken { background: var(--lt-green); }
+.lt-bar-missed { background: var(--lt-terracotta); }
+.lt-cal-legend i.lt-bar-taken, .lt-cal-legend i.lt-bar-missed { border-radius: 3px; }
+[dir="rtl"] .ml-auto { margin-left: 0 !important; margin-right: auto !important; }
+
+/* Messages */
+.lt-msg-list { max-height: 460px; overflow-y: auto; padding-inline-end: 6px; }
+.lt-msg { display: flex; gap: 10px; margin-bottom: 14px; align-items: flex-start; }
+.lt-msg.is-mine { flex-direction: row-reverse; }
+.lt-msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--lt-navy); color: #fff; font-size: 13px; font-weight: 700; object-fit: cover; }
+.lt-msg-bubble { background: var(--lt-gray); border-radius: 12px; padding: 8px 12px; max-width: 78%; }
+.lt-msg.is-mine .lt-msg-bubble { background: var(--lt-green-light); }
+.lt-msg-meta { font-size: 12px; color: #6F665F; margin-bottom: 2px; }
+.lt-msg-text { font-size: 14px; word-wrap: break-word; }
+.lt-msg-delete { margin: 2px 0 0; }
+.lt-msg-delete .btn-link { font-size: 12px; color: var(--lt-terracotta); }
+
+/* Carte d'urgence */
+.lt-urgence { background: #fff; border: 2px solid #E04F3A; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 30px rgba(198, 93, 59, .15); }
+.lt-urgence-head { display: flex; align-items: center; gap: 14px; background: #E04F3A; color: #fff; padding: 16px 20px; }
+.lt-urgence-head > i { font-size: 38px; }
+.lt-urgence-head > div:nth-child(2) { flex: 1; }
+.lt-urgence-head small { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; opacity: .9; }
+.lt-urgence-head h2 { color: #fff; margin: 0; font-size: 24px; }
+.lt-urgence-blood { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #E04F3A; font-size: 22px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; }
+.lt-urgence-body { display: grid; grid-template-columns: max-content 1fr; gap: 10px 16px; padding: 20px; margin: 0; }
+.lt-urgence-body dt { color: #E04F3A; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.lt-urgence-body dd { margin: 0; color: var(--lt-brown); font-weight: 600; }
+.lt-urgence-qr { text-align: center; padding: 0 20px 10px; }
+.lt-urgence-qr svg { max-width: 200px; height: auto; }
+.lt-urgence-qr p { font-size: 12px; color: #6F665F; margin: 4px 0 0; }
+.lt-urgence-foot { font-size: 11px; color: #8a817a; text-align: center; margin: 0; padding: 8px 20px 14px; }
+.lt-textarea { height: auto !important; }
+@media (max-width: 575px) { .lt-urgence-body { grid-template-columns: 1fr; gap: 2px; } .lt-urgence-body dd { margin-bottom: 10px; } }
+.lt-public-card { background: var(--lt-gray); }
+
+/* Impression : seulement la carte d'urgence */
+@media print {
+  header, footer, .lt-no-print, .lt-spinner, #spinner { display: none !important; }
+  body { background: #fff !important; }
+  .section { padding: 0 !important; }
+  .col-lg-7 { flex: 0 0 100%; max-width: 100%; }
+  .lt-urgence { box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

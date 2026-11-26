@@ -162,9 +162,20 @@ class AuthController extends Controller
             $this->setLang($_POST);
         }
         // Liste blanche des pages de retour : pas de redirection libre
-        $allowedBack = ['home', 'login', 'register', 'forgot_password', 'reset_password', 'dashboard', 'profile', 'admin', 'admin_users'];
+        $allowedBack = ['home', 'login', 'register', 'forgot_password', 'reset_password', 'dashboard', 'profile', 'admin', 'admin_users',
+            'family', 'family_view', 'family_member', 'family_card', 'urgence'];
         $back = in_array($_POST['back'] ?? '', $allowedBack, true) ? $_POST['back'] : 'home';
-        $this->redirect($back);
+        // Paramètres de la page d'origine (famille, onglet, membre, mois...) : chacun revérifié
+        parse_str((string) ($_POST['back_query'] ?? ''), $query);
+        $rules = ['id' => '/^\d{1,10}$/', 'member' => '/^\d{1,10}$/', 'tab' => '/^[a-z]{1,20}$/',
+                  'm' => '/^\d{4}-\d{2}$/', 't' => '/^[a-f0-9]{32}$/'];
+        $safe = [];
+        foreach ($rules as $key => $regex) {
+            if (isset($query[$key]) && is_string($query[$key]) && preg_match($regex, $query[$key])) {
+                $safe[$key] = $query[$key];
+            }
+        }
+        $this->redirect($back, http_build_query($safe));
     }
 
     // ==============================================================
@@ -187,7 +198,22 @@ class AuthController extends Controller
     /** Charge le fichier de traduction de la langue courante */
     public static function loadTranslations(): array
     {
-        return require __DIR__ . '/../config/lang/' . self::getLang() . '.php';
+        return self::translationsFor(self::getLang());
+    }
+
+    /**
+     * Textes d'une langue : fichier commun config/lang/<langue>.php, plus les fichiers
+     * propres à chaque module, config/lang/<module>/<langue>.php (ex : family/fr.php).
+     * Chaque membre du groupe ajoute ses textes dans son propre fichier : pas de conflit Git.
+     */
+    public static function translationsFor(string $lang): array
+    {
+        $lang = in_array($lang, self::LANGUES, true) ? $lang : 'fr';
+        $t = require __DIR__ . '/../config/lang/' . $lang . '.php';
+        foreach (glob(__DIR__ . '/../config/lang/*/' . $lang . '.php') ?: [] as $file) {
+            $t += (array) require $file;
+        }
+        return $t;
     }
 
     /**

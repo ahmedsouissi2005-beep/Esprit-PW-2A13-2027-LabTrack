@@ -51,6 +51,32 @@
     });
   });
 
+  // Espace famille : confirmation avant une action importante (retirer, quitter, supprimer).
+  // data-confirm-value : ne demander que si le choix vaut cette valeur (ex : transmettre le rôle).
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      var only = form.getAttribute('data-confirm-value');
+      var select = form.querySelector('select');
+      if (only && (!select || select.value !== only)) { return; }
+      if (!window.confirm(form.getAttribute('data-confirm'))) {
+        e.preventDefault();
+        if (select) { select.value = select.getAttribute('data-initial') || select.value; }
+      }
+    });
+  });
+  // Changer un rôle dans la liste l'enregistre tout de suite
+  document.querySelectorAll('select[data-autosubmit-select]').forEach(function (select) {
+    select.setAttribute('data-initial', select.value);
+    select.addEventListener('change', function () {
+      var form = select.form;
+      form.requestSubmit ? form.requestSubmit() : form.submit();
+    });
+  });
+  // Carte d'urgence : imprimer ou enregistrer en PDF
+  document.querySelectorAll('[data-print]').forEach(function (btn) {
+    btn.addEventListener('click', function () { window.print(); });
+  });
+
   // Mot de passe oublié : compte à rebours avant l'expiration du code (5 minutes).
   // Le serveur refuse de toute façon un code expiré ; ceci n'est qu'un affichage.
   document.querySelectorAll('[data-countdown]').forEach(function (box) {

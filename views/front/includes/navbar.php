@@ -25,6 +25,7 @@ $isAdmin  = ($_SESSION['role'] ?? '') === 'admin';
                         <form class="lt-lang-switch" method="POST" action="index.php?page=set_lang">
                             <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
                             <input type="hidden" name="back" value="<?= e($currentPage) ?>">
+                            <input type="hidden" name="back_query" value="<?= e(http_build_query(array_intersect_key($_GET, array_flip(['id', 'tab', 'member', 'm', 't'])))) ?>">
                             <span class="lt-lang-label"><i class="icofont-globe mr-1"></i><?= $t['language'] ?> :</span>
                             <?php foreach (['fr' => 'FR', 'ar' => 'عربي', 'en' => 'EN'] as $code => $label): ?>
                                 <button type="submit" name="langue" value="<?= $code ?>"
@@ -55,6 +56,7 @@ $isAdmin  = ($_SESSION['role'] ?? '') === 'admin';
 
                     <?php if ($isLogged): ?>
                         <li class="nav-item <?= navActive('dashboard', $currentPage) ?>"><a class="nav-link" href="index.php?page=dashboard"><?= $t['nav_dashboard'] ?></a></li>
+                        <li class="nav-item <?= navActive('family', $currentPage) ?>"><a class="nav-link" href="index.php?page=family"><?= $t['fam_nav'] ?></a></li>
                         <li class="nav-item <?= navActive('profile', $currentPage) ?>"><a class="nav-link" href="index.php?page=profile"><?= $t['nav_profile'] ?></a></li>
                         <?php if ($isAdmin): ?>
                             <li class="nav-item"><a class="nav-link" href="index.php?page=admin"><?= $t['nav_admin'] ?></a></li>
