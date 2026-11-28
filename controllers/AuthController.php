@@ -321,9 +321,9 @@ class AuthController extends Controller
      * random_int() est un générateur cryptographique : le code n'est pas devinable
      * à partir de l'id. La colonne code est aussi UNIQUE en base (double sécurité).
      */
-    private function generateUniqueCode(): ?string
+    private static function generateUniqueCode(PDO $db): ?string
     {
-        $stmt = $this->db->prepare('SELECT id FROM utilisateur WHERE code = :code LIMIT 1');
+        $stmt = $db->prepare('SELECT id FROM utilisateur WHERE code = :code LIMIT 1');
         for ($try = 0; $try < 100; $try++) {
             $code = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
             $stmt->execute(['code' => $code]);
@@ -392,7 +392,7 @@ class AuthController extends Controller
         $user->setRole('patient');
         $user->setLangue($langue);
 
-        $code = $this->generateUniqueCode();
+        $code = self::generateUniqueCode($this->db);
         if ($code === null) {
             $errors[] = $this->t['err_generic'];
             return $errors;
@@ -538,6 +538,79 @@ class AuthController extends Controller
     // ==============================================================
     // ESPACE UTILISATEUR (frontoffice : patient)
     // ==============================================================
+
+    /**
+     * MISE À JOUR AUTOMATIQUE de la table utilisateur (appelée par index.php à chaque requête).
+     * Une base créée avec une ANCIENNE version de database.sql garde son ancienne table :
+     * CREATE TABLE IF NOT EXISTS ne la modifie jamais, et l'inscription et la connexion
+     * échouaient alors avec "Unknown column 'code'" ou "'locked_until'".
+     * Ici, les colonnes manquantes sont ajoutées (et les comptes existants reçoivent leur
+     * code personnel), pour que personne n'ait rien à exécuter après un git pull.
+     * Base déjà à jour : une seule petite requête, rien n'est modifié.
+     */
+    public static function ensureUserSchema(): void
+    {
+        $db = Database::getConnexion();
+        $nullable = []; // nom de colonne => accepte NULL ?
+        $rows = $db->query(
+            "SELECT column_name AS name, is_nullable AS nullable FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'utilisateur'"
+        )->fetchAll();
+        foreach ($rows as $row) {
+            $nullable[strtolower((string) $row['name'])] = $row['nullable'] === 'YES';
+        }
+        if ($nullable === []) {
+            return; // pas de table utilisateur : il faut importer database.sql
+        }
+
+        // Dans l'ordre de database.sql : chaque colonne se place après la précédente
+        $columns = [
+            'code'            => 'CHAR(4) NULL AFTER email',
+            'session_token'   => 'CHAR(64) NULL DEFAULT NULL AFTER langue',
+            'failed_attempts' => 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER session_token',
+            'locked_until'    => 'DATETIME NULL DEFAULT NULL AFTER failed_attempts',
+            'avatar'          => 'VARCHAR(64) NULL DEFAULT NULL AFTER locked_until',
+        ];
+        foreach ($columns as $name => $definition) {
+            if (!array_key_exists($name, $nullable)) {
+                self::execSchemaChange($db, "ALTER TABLE utilisateur ADD COLUMN $name $definition");
+                $nullable[$name] = true;
+            }
+        }
+
+        // Colonne code encore facultative : comptes créés avant le code personnel.
+        // Chacun reçoit un code aléatoire unique, puis la colonne devient NOT NULL UNIQUE.
+        if ($nullable['code']) {
+            $update = $db->prepare('UPDATE utilisateur SET code = :code WHERE id = :id');
+            $ids = $db->query('SELECT id FROM utilisateur WHERE code IS NULL')->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($ids as $id) {
+                $code = self::generateUniqueCode($db);
+                if ($code === null) {
+                    return; // plus de code libre : la colonne reste facultative
+                }
+                $update->execute(['code' => $code, 'id' => (int) $id]);
+            }
+            self::execSchemaChange($db, 'ALTER TABLE utilisateur MODIFY code CHAR(4) NOT NULL');
+            if (!$db->query("SHOW INDEX FROM utilisateur WHERE Column_name = 'code' AND Non_unique = 0")->fetch()) {
+                self::execSchemaChange($db, 'ALTER TABLE utilisateur ADD UNIQUE KEY code (code)');
+            }
+        }
+    }
+
+    /**
+     * Exécute un ALTER TABLE. Si deux pages s'ouvrent au même moment sur une ancienne base,
+     * l'autre requête a pu ajouter la colonne (1060) ou l'index (1061) juste avant : on l'ignore.
+     */
+    private static function execSchemaChange(PDO $db, string $sql): void
+    {
+        try {
+            $db->exec($sql);
+        } catch (PDOException $e) {
+            if (!in_array((int) ($e->errorInfo[1] ?? 0), [1060, 1061], true)) {
+                throw $e;
+            }
+        }
+    }
 
     /**
      * UNE SEULE CONNEXION À LA FOIS (appelée par index.php à chaque requête).
@@ -727,17 +800,6 @@ class AuthController extends Controller
         return dirname(__DIR__) . '/storage/avatars/' . $name;
     }
 
-    /**
-     * Base créée avant la photo de profil : on ajoute la colonne avatar une seule fois,
-     * pour que chaque membre de l'équipe n'ait rien à exécuter après un git pull.
-     */
-    private function ensureAvatarColumn(): void
-    {
-        if (!$this->db->query("SHOW COLUMNS FROM utilisateur LIKE 'avatar'")->fetch()) {
-            $this->db->exec('ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until');
-        }
-    }
-
     private static function deleteAvatarFile(?string $name): void
     {
         $path = self::avatarPath($name);
@@ -791,7 +853,6 @@ class AuthController extends Controller
             return [$this->t['err_photo_type']];
         }
 
-        $this->ensureAvatarColumn();
         $user = $this->findById($userId);
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = :avatar WHERE id = :id');
         $stmt->execute(['avatar' => $name, 'id' => $userId]);
@@ -828,7 +889,6 @@ class AuthController extends Controller
         if (!$this->verifyCsrfToken($post['csrf_token'] ?? null)) {
             return [$this->t['err_csrf']];
         }
-        $this->ensureAvatarColumn();
         $user = $this->findById($userId);
         $stmt = $this->db->prepare('UPDATE utilisateur SET avatar = NULL WHERE id = :id');
         $stmt->execute(['id' => $userId]);
@@ -1067,7 +1127,7 @@ class AuthController extends Controller
         $user->setRole($role);
         $user->setLangue($langue);
 
-        $code = $this->generateUniqueCode();
+        $code = self::generateUniqueCode($this->db);
         if ($code === null) {
             return [$this->t['err_generic']];
         }
