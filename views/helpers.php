@@ -102,6 +102,7 @@ function validationAttrs(array $t): string
         'time'       => 'rap_err_time',
         'date'       => 'rap_err_date',
         'after'      => 'rap_err_end',
+        'count'      => 'rap_err_count',
     ];
     $html = 'novalidate data-validate';
     foreach ($messages as $name => $key) {

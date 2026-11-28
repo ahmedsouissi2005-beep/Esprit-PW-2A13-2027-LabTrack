@@ -223,4 +223,8 @@ return [
     'fam_admin_type'        => 'Type',
     'fam_admin_account'     => 'LabTrack account',
     'fam_admin_joined'      => 'Joined',
+
+    // Alerte de stock (module Rappels & visites)
+    'fam_alert_stock' => '%s: %s, about %d day(s) of treatment left. Time to buy more.',
+    'fam_alert_stock_out' => '%s: %s, the box is empty.',
 ];

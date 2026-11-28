@@ -79,6 +79,13 @@
       case 'date':
         if (!DATE_RE.test(value) || isNaN(new Date(value).getTime())) { return msg('date'); }
         break;
+      case 'count':
+        // nombre entier entre les attributs min et max du champ (stock, unités par prise)
+        var n = Number(value);
+        var min = field.hasAttribute('min') ? Number(field.getAttribute('min')) : -Infinity;
+        var max = field.hasAttribute('max') ? Number(field.getAttribute('max')) : Infinity;
+        if (!/^\d+$/.test(value) || n < min || n > max) { return msg('count'); }
+        break;
       case 'photo':
         var file = field.files && field.files[0];
         if (file && PHOTO_TYPES.indexOf(file.type) === -1) { return msg('photo-type'); }

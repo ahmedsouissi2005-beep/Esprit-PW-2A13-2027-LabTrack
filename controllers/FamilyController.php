@@ -22,6 +22,7 @@ require_once __DIR__ . '/../config/QrCode.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/FamilleModel.php';
 require_once __DIR__ . '/../models/MembreModel.php';
+require_once __DIR__ . '/../models/RappelModel.php';
 
 class FamilyController extends Controller
 {
@@ -852,6 +853,19 @@ class FamilyController extends Controller
     // ==============================================================
 
     /** Une table d'un autre module existe-t-elle déjà ? */
+    /**
+     * Heures de prise d'un rappel (HH:MM, triées). Colonne `heures` ("08:00,14:00,20:00") si elle
+     * existe et n'est pas vide, sinon l'unique colonne `heure` (anciennes lignes).
+     * @return string[]
+     */
+    private function doseTimes(array $row): array
+    {
+        $list = trim((string) ($row['heures'] ?? ''));
+        $times = $list !== '' ? array_map(fn($h) => substr(trim($h), 0, 5), explode(',', $list)) : [substr((string) $row['heure'], 0, 5)];
+        sort($times);
+        return $times;
+    }
+
     private function hasTable(string $name): bool
     {
         if (!array_key_exists($name, $this->tableCache)) {
@@ -876,6 +890,18 @@ class FamilyController extends Controller
             ) > 0;
         }
         return $this->tableCache['rdv_statut'] ? ' AND ' . ($alias !== '' ? $alias . '.' : '') . "statut <> 'annule'" : '';
+    }
+
+    /** Le module Rappels a-t-il les colonnes du stock de médicaments ? */
+    private function hasStockColumns(): bool
+    {
+        if (!array_key_exists('rappel_stock', $this->tableCache)) {
+            $this->tableCache['rappel_stock'] = $this->scalar(
+                "SELECT COUNT(*) FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'rappel_medicament' AND column_name = 'stock_maj'"
+            ) > 0;
+        }
+        return $this->tableCache['rappel_stock'];
     }
 
     /** Modules branchés (pour expliquer à l'utilisateur ce qui n'est pas encore disponible) */
@@ -964,7 +990,7 @@ class FamilyController extends Controller
 
         if ($this->hasTable('rappel_medicament') && ($where = $this->ownerWhere($visible['rappels']))) {
             $stmt = $this->db->prepare(
-                "SELECT id, user_id, membre_id, medicament, dose, heure, date_debut, date_fin FROM rappel_medicament
+                "SELECT * FROM rappel_medicament
                  WHERE $where AND date_debut <= :b AND (date_fin IS NULL OR date_fin >= :a) ORDER BY heure"
             );
             $stmt->execute(['a' => $start->format('Y-m-d'), 'b' => $end->format('Y-m-d')]);
@@ -972,13 +998,16 @@ class FamilyController extends Controller
                 $from = max($start->format('Y-m-d'), $row['date_debut']);
                 $to = min($end->format('Y-m-d'), $row['date_fin'] ?? $end->format('Y-m-d'));
                 for ($d = new DateTime($from); $d->format('Y-m-d') <= $to; $d->modify('+1 day')) {
-                    $events[$d->format('Y-m-d')][] = [
-                        'type'   => 'med',
-                        'member' => $this->ownerMemberId($visible['rappels'], $row),
-                        'time'   => substr($row['heure'], 0, 5),
-                        'title'  => trim($row['medicament'] . ' ' . ($row['dose'] ?? '')),
-                        'place'  => '',
-                    ];
+                    // Une entrée par prise de la journée (médicament pris plusieurs fois par jour)
+                    foreach ($this->doseTimes($row) as $time) {
+                        $events[$d->format('Y-m-d')][] = [
+                            'type'   => 'med',
+                            'member' => $this->ownerMemberId($visible['rappels'], $row),
+                            'time'   => $time,
+                            'title'  => trim($row['medicament'] . ' ' . ($row['dose'] ?? '')),
+                            'place'  => '',
+                        ];
+                    }
                 }
             }
         }
@@ -1022,7 +1051,7 @@ class FamilyController extends Controller
         $now = new DateTime();
 
         $stmt = $this->db->prepare(
-            "SELECT r.id, r.user_id, r.membre_id, r.heure, r.date_debut, r.date_fin FROM rappel_medicament r
+            "SELECT r.* FROM rappel_medicament r
              WHERE $where AND r.date_debut <= :b AND (r.date_fin IS NULL OR r.date_fin >= :a)"
         );
         $stmt->execute(['a' => $from->format('Y-m-d'), 'b' => $today->format('Y-m-d')]);
@@ -1033,12 +1062,18 @@ class FamilyController extends Controller
         $ids = implode(',', array_map(fn($r) => (int) $r['id'], $reminders));
         $taken = [];
         $stmt = $this->db->prepare(
-            "SELECT rappel_id, date_prise FROM prise_medicament
+            "SELECT * FROM prise_medicament
              WHERE rappel_id IN ($ids) AND statut = 'pris' AND date_prise >= :a"
         );
         $stmt->execute(['a' => $from->format('Y-m-d')]);
+        $firstTime = [];
+        foreach ($reminders as $r) {
+            $firstTime[$r['id']] = $this->doseTimes($r)[0];
+        }
         foreach ($stmt->fetchAll() as $p) {
-            $taken[$p['rappel_id'] . '|' . $p['date_prise']] = true;
+            // clé : rappel | jour | heure de la prise (anciennes lignes sans heure : la 1re prise)
+            $time = isset($p['heure']) ? substr((string) $p['heure'], 0, 5) : ($firstTime[$p['rappel_id']] ?? '');
+            $taken[$p['rappel_id'] . '|' . $p['date_prise'] . '|' . $time] = true;
         }
 
         foreach ($reminders as $r) {
@@ -1052,12 +1087,14 @@ class FamilyController extends Controller
                 if ($day < $r['date_debut'] || ($r['date_fin'] !== null && $day > $r['date_fin'])) {
                     continue;
                 }
-                $due = new DateTime($day . ' ' . $r['heure']);
-                if ($due > $now) {
-                    continue; // pas encore l'heure
+                foreach ($this->doseTimes($r) as $time) {
+                    $due = new DateTime($day . ' ' . $time);
+                    if ($due > $now) {
+                        continue; // pas encore l'heure
+                    }
+                    $stats[$memberId]['planned']++;
+                    isset($taken[$r['id'] . '|' . $day . '|' . $time]) ? $stats[$memberId]['taken']++ : $stats[$memberId]['missed']++;
                 }
-                $stats[$memberId]['planned']++;
-                isset($taken[$r['id'] . '|' . $day]) ? $stats[$memberId]['taken']++ : $stats[$memberId]['missed']++;
             }
         }
         return $stats;
@@ -1075,18 +1112,53 @@ class FamilyController extends Controller
 
         // Médicament de la journée pas encore coché "pris" (aidants et gestionnaire)
         if ($caring && $this->moduleStatus()['rappels'] && ($where = $this->ownerWhere($visible['rappels'], 'r'))) {
-            $stmt = $this->db->query(
-                "SELECT r.user_id, r.membre_id, r.medicament, r.heure FROM rappel_medicament r
+            $rows = $this->db->query(
+                "SELECT r.* FROM rappel_medicament r
                  WHERE $where AND r.date_debut <= CURDATE() AND (r.date_fin IS NULL OR r.date_fin >= CURDATE())
-                   AND r.heure <= CURTIME()
-                   AND NOT EXISTS (SELECT 1 FROM prise_medicament p WHERE p.rappel_id = r.id
-                                   AND p.date_prise = CURDATE() AND p.statut = 'pris')
                  ORDER BY r.heure"
-            );
-            foreach ($stmt->fetchAll() as $row) {
+            )->fetchAll();
+            // Prises déjà cochées "pris" aujourd'hui : rappel | heure
+            $doneToday = [];
+            if ($rows) {
+                $ids = implode(',', array_map(fn($r) => (int) $r['id'], $rows));
+                foreach ($this->db->query("SELECT * FROM prise_medicament WHERE rappel_id IN ($ids) AND date_prise = CURDATE() AND statut = 'pris'")->fetchAll() as $p) {
+                    $time = isset($p['heure']) ? substr((string) $p['heure'], 0, 5) : null;
+                    $doneToday[$p['rappel_id'] . '|' . $time] = true;
+                    $doneToday[$p['rappel_id'] . '|*'] = true; // ancienne ligne sans heure : couvre la 1re prise
+                }
+            }
+            $nowHm = date('H:i');
+            $late = [];
+            foreach ($rows as $row) {
+                foreach ($this->doseTimes($row) as $i => $time) {
+                    if ($time <= $nowHm && !isset($doneToday[$row['id'] . '|' . $time]) && !($i === 0 && !array_key_exists('heures', $row) && isset($doneToday[$row['id'] . '|*']))) {
+                        $late[] = [$time, $row];
+                    }
+                }
+            }
+            usort($late, fn($a, $b) => strcmp($a[0], $b[0]));
+            foreach ($late as [$time, $row]) {
                 $mid = $this->ownerMemberId($visible['rappels'], $row);
                 $alerts[] = ['level' => 'warning', 'icon' => 'icofont-pills',
-                    'text' => sprintf($this->t['fam_alert_med'], $names[$mid] ?? '', $row['medicament'], substr($row['heure'], 0, 5))];
+                    'text' => sprintf($this->t['fam_alert_med'], $names[$mid] ?? '', $row['medicament'], $time)];
+            }
+        }
+        // Boîte bientôt vide (module Rappels & visites, colonnes stock) : aidants et gestionnaire
+        if ($caring && $this->moduleStatus()['rappels'] && $this->hasStockColumns() && ($where = $this->ownerWhere($visible['rappels'], 'r'))) {
+            $rows = $this->db->query(
+                "SELECT r.*, (SELECT COUNT(*) FROM prise_medicament p WHERE p.rappel_id = r.id AND p.statut = 'pris'
+                              AND r.stock_maj IS NOT NULL AND p.pris_at >= r.stock_maj) AS used
+                 FROM rappel_medicament r
+                 WHERE $where AND r.stock IS NOT NULL AND (r.date_fin IS NULL OR r.date_fin >= CURDATE())"
+            )->fetchAll();
+            foreach ($rows as $row) {
+                $status = RappelModel::fromArray($row)->stockStatus((int) $row['used'], RappelController::STOCK_ALERT_DAYS);
+                if ($status && $status['low']) {
+                    $mid = $this->ownerMemberId($visible['rappels'], $row);
+                    $alerts[] = ['level' => 'warning', 'icon' => 'icofont-box', 'text' => $status['out']
+                        ? sprintf($this->t['fam_alert_stock_out'], $names[$mid] ?? '', $row['medicament'])
+                        : sprintf($this->t['fam_alert_stock'], $names[$mid] ?? '', $row['medicament'], $status['days'])];
+                }
             }
         }
         // Rendez-vous dans les 48 prochaines heures (tout le monde)
@@ -1134,19 +1206,24 @@ class FamilyController extends Controller
             }
         }
         if ($this->moduleStatus()['rappels'] && ($where = $this->ownerWhere($visible['rappels'], 'r'))) {
+            // Prises du jour = une par heure de chaque rappel ; prises cochées = lignes "pris" du jour
             $rows = $this->db->query(
-                "SELECT r.user_id, r.membre_id, COUNT(*) AS total,
-                        SUM(EXISTS (SELECT 1 FROM prise_medicament p WHERE p.rappel_id = r.id
-                                    AND p.date_prise = CURDATE() AND p.statut = 'pris')) AS taken
-                 FROM rappel_medicament r
-                 WHERE $where AND r.date_debut <= CURDATE() AND (r.date_fin IS NULL OR r.date_fin >= CURDATE())
-                 GROUP BY r.user_id, r.membre_id"
+                "SELECT r.* FROM rappel_medicament r
+                 WHERE $where AND r.date_debut <= CURDATE() AND (r.date_fin IS NULL OR r.date_fin >= CURDATE())"
             )->fetchAll();
+            $takenToday = [];
+            if ($rows) {
+                $ids = implode(',', array_map(fn($r) => (int) $r['id'], $rows));
+                foreach ($this->db->query("SELECT rappel_id, COUNT(*) AS n FROM prise_medicament WHERE rappel_id IN ($ids) AND date_prise = CURDATE() AND statut = 'pris' GROUP BY rappel_id")->fetchAll() as $p) {
+                    $takenToday[$p['rappel_id']] = (int) $p['n'];
+                }
+            }
             foreach ($rows as $row) {
                 $mid = $this->ownerMemberId($visible['rappels'], $row);
                 if ($mid !== null) {
-                    $out[$mid]['doses_today'] = (int) $row['total'];
-                    $out[$mid]['doses_taken'] = (int) $row['taken'];
+                    $planned = count($this->doseTimes($row));
+                    $out[$mid]['doses_today'] = ($out[$mid]['doses_today'] ?? 0) + $planned;
+                    $out[$mid]['doses_taken'] = ($out[$mid]['doses_taken'] ?? 0) + min($planned, $takenToday[$row['id']] ?? 0);
                 }
             }
         }

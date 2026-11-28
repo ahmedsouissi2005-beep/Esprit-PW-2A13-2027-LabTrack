@@ -40,6 +40,7 @@ $card = function (RendezVousModel $rdv, bool $isPast) use ($t, $csrfToken, $owne
                         <button type="submit" name="statut" value="prevu" class="btn btn-sm btn-link lt-undo"><?= $t['rap_btn_reopen'] ?></button>
                     <?php endif; ?>
                 </form>
+                <a class="btn btn-sm btn-outline-primary" href="index.php?page=rdv_ics&amp;id=<?= $rdv->getId() ?>" title="<?= e($t['rap_ics_one']) ?>" download><i class="icofont-ui-calendar"></i><span class="sr-only"><?= e($t['rap_ics_one']) ?></span></a>
                 <a class="btn btn-sm btn-outline-primary" href="index.php?page=rdv_form&amp;id=<?= $rdv->getId() ?>" title="<?= e($t['btn_edit']) ?>"><i class="icofont-edit"></i></a>
                 <form method="POST" action="index.php?page=rdv_delete" class="lt-inline-form" data-confirm="<?= e(sprintf($t['rap_confirm_delete_rdv'], $rdv->getTitre())) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
@@ -61,7 +62,13 @@ $card = function (RendezVousModel $rdv, bool $isPast) use ($t, $csrfToken, $owne
         <button type="submit" class="btn btn-outline-primary"><i class="icofont-search-1"></i></button>
         <?php if ($query !== ''): ?><a class="btn btn-link" href="index.php?page=rappels&amp;tab=appointments<?= $ownerQuery ?>"><?= $t['btn_reset'] ?></a><?php endif; ?>
     </form>
-    <a class="btn btn-sm btn-main btn-round-full" href="index.php?page=rdv_form<?= $ownerQuery ?>"><i class="icofont-plus mr-1"></i><?= $t['rap_add_rdv'] ?></a>
+    <div class="d-flex lt-gap">
+        <?php if ($upcoming): ?>
+            <!-- Tous les rendez-vous à venir dans un seul fichier .ics (Google Agenda, Apple, Outlook) -->
+            <a class="btn btn-sm btn-outline-primary btn-round-full" href="index.php?page=rdv_ics&amp;all=1<?= $ownerQuery ?>" title="<?= e($t['rap_ics_help']) ?>" download><i class="icofont-ui-calendar mr-1"></i><?= e($t['rap_ics_all']) ?></a>
+        <?php endif; ?>
+        <a class="btn btn-sm btn-main btn-round-full" href="index.php?page=rdv_form<?= $ownerQuery ?>"><i class="icofont-plus mr-1"></i><?= $t['rap_add_rdv'] ?></a>
+    </div>
 </div>
 
 <h4 class="title-color mb-3"><?= $t['rap_upcoming'] ?> <small class="text-muted">(<?= count($upcoming) ?>)</small></h4>

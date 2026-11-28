@@ -64,8 +64,12 @@ $editing = $reminder !== null;
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-4">
-                                <label for="heure"><?= $t['rap_heure'] ?></label>
-                                <input type="time" id="heure" name="heure" class="form-control" required data-rule="time" value="<?= e($old['heure']) ?>">
+                                <label for="frequence"><?= $t['rap_frequence'] ?></label>
+                                <select id="frequence" name="frequence" class="form-control" required data-editing="<?= $editing ? '1' : '0' ?>">
+                                    <?php for ($n = 1; $n <= RappelModel::MAX_FREQUENCE; $n++): ?>
+                                        <option value="<?= $n ?>" <?= (int) $old['frequence'] === $n ? 'selected' : '' ?>><?= sprintf($t['rap_frequence_opt'], $n) ?></option>
+                                    <?php endfor; ?>
+                                </select>
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="date_debut"><?= $t['rap_date_debut'] ?></label>
@@ -76,10 +80,38 @@ $editing = $reminder !== null;
                                 <input type="date" id="date_fin" name="date_fin" class="form-control" data-rule="date" data-after="date_debut" value="<?= e($old['date_fin']) ?>">
                             </div>
                         </div>
+                        <!-- Une heure par prise : la fréquence choisie affiche autant de champs (6 au maximum) -->
+                        <div class="form-group">
+                            <label><?= $t['rap_heures'] ?></label>
+                            <div class="form-row" id="heures-list">
+                                <?php for ($i = 0; $i < RappelModel::MAX_FREQUENCE; $i++):
+                                    $active = $i < (int) $old['frequence']; ?>
+                                    <div class="form-group col-md-4 lt-heure-slot" <?= $active ? '' : 'hidden' ?>>
+                                        <label for="heure_<?= $i ?>" class="small text-muted mb-1"><?= sprintf($t['rap_prise_n'], $i + 1) ?></label>
+                                        <input type="time" id="heure_<?= $i ?>" name="heures[]" class="form-control lt-heure-input" data-rule="time"
+                                               value="<?= e($old['heures'][$i] ?? '') ?>" <?= $active ? 'required' : 'disabled' ?>>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label for="note"><?= $t['rap_note'] ?> <small class="text-muted">(<?= $t['rap_optional'] ?>)</small></label>
                             <input type="text" id="note" name="note" class="form-control" maxlength="200" placeholder="<?= e($t['rap_note_ph']) ?>" value="<?= e($old['note']) ?>">
                         </div>
+                        <!-- Stock (facultatif) : chaque prise cochée "pris" consomme "unités par prise" -->
+                        <div class="form-row">
+                            <div class="form-group col-md-7">
+                                <label for="stock"><?= $t['rap_stock'] ?> <small class="text-muted">(<?= $t['rap_optional'] ?>)</small></label>
+                                <input type="number" id="stock" name="stock" class="form-control" min="0" max="<?= RappelController::STOCK_MAX ?>" data-rule="count"
+                                       placeholder="<?= e($t['rap_stock_ph']) ?>" value="<?= e($old['stock']) ?>">
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="unites"><?= $t['rap_units'] ?></label>
+                                <input type="number" id="unites" name="unites" class="form-control" min="1" max="<?= RappelController::UNITS_MAX ?>" required data-rule="count"
+                                       value="<?= e($old['unites']) ?>">
+                            </div>
+                        </div>
+                        <p class="lt-note"><i class="icofont-box mr-1"></i><?= e(sprintf($t['rap_stock_help'], RappelController::STOCK_ALERT_DAYS)) ?></p>
                         <p class="lt-note"><i class="icofont-info-circle mr-1"></i><?= $t['rap_form_help'] ?></p>
                         <button type="submit" class="btn btn-main btn-round-full btn-block mt-3"><?= $editing ? $t['btn_update'] : $t['rap_add_reminder'] ?></button>
                     </form>
@@ -92,5 +124,7 @@ $editing = $reminder !== null;
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 <?php require_once __DIR__ . '/includes/scripts.php'; ?>
+<script src="<?= e(asset('assets/js/rappel-form.js')) ?>"></script>
+
 </body>
 </html>

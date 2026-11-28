@@ -174,7 +174,8 @@ CREATE TABLE IF NOT EXISTS rendez_vous (
     CONSTRAINT fk_rdv_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Rappels de médicaments : une heure par jour, entre date_debut et date_fin (NULL = sans fin)
+-- Rappels de médicaments : frequence prises par jour (1 à 6), une heure par prise, entre date_debut et
+-- date_fin (NULL = sans fin). heures = liste "08:00,14:00,20:00" ; heure = la 1re prise (lue par l'Espace famille).
 CREATE TABLE IF NOT EXISTS rappel_medicament (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT NULL,
@@ -182,26 +183,46 @@ CREATE TABLE IF NOT EXISTS rappel_medicament (
     medicament VARCHAR(100) NOT NULL,
     dose       VARCHAR(50) NULL,
     heure      TIME NOT NULL,
+    heures     VARCHAR(60) NULL,
+    frequence  TINYINT NOT NULL DEFAULT 1,
     date_debut DATE NOT NULL,
     date_fin   DATE NULL,
     note       VARCHAR(200) NULL,                          -- consigne : "pendant le repas"
+    stock      SMALLINT UNSIGNED NULL,                     -- unités dans la boîte à stock_maj (NULL = non suivi)
+    unites_par_prise TINYINT UNSIGNED NOT NULL DEFAULT 1,  -- unités consommées par prise cochée "pris"
+    stock_maj  DATETIME NULL,                              -- date de la dernière mise à jour du stock
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_rappel_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
     CONSTRAINT fk_rappel_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Prises cochées : une ligne par rappel et par jour (UNIQUE), "pris" ou "oublié".
+-- Prises cochées : une ligne par rappel, par jour et par heure de prise (UNIQUE), "pris" ou "oublié".
 -- Une prise dont l'heure est passée sans ligne compte comme oubliée.
 CREATE TABLE IF NOT EXISTS prise_medicament (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     rappel_id  INT NOT NULL,
     date_prise DATE NOT NULL,
+    heure      TIME NOT NULL DEFAULT '00:00:00',          -- heure de la prise cochée (une des heures du rappel)
     statut     ENUM('pris','oublie') NOT NULL DEFAULT 'pris',
     pris_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,        -- moment où la case a été cochée
     coche_par  INT NULL,                                   -- compte qui a coché (le patient ou un aidant)
-    UNIQUE KEY uq_prise (rappel_id, date_prise),
+    UNIQUE KEY uq_prise (rappel_id, date_prise, heure),
     CONSTRAINT fk_prise_rappel FOREIGN KEY (rappel_id) REFERENCES rappel_medicament(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Carnet médical : notes personnelles et privées d'un compte (observations, questions pour le
+-- médecin), éventuellement liées à un de ses rendez-vous. Si le rendez-vous est supprimé, la
+-- note est gardée et n'est plus liée à rien (RappelController::deleteAppointment).
+CREATE TABLE IF NOT EXISTS carnet_medical (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_id        INT NOT NULL,
+    titre          VARCHAR(150) NOT NULL,
+    contenu        TEXT NOT NULL,                          -- 5000 caractères au plus (vérifié en PHP)
+    rendez_vous_id INT NULL,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_carnet_user (user_id),
+    CONSTRAINT fk_carnet_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------

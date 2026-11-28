@@ -36,7 +36,7 @@ This project was developed as part of the **Web Technologies Project (Projet Web
 |---|---|---|---|
 | — | **User management** | Accounts, roles (patient, admin), preferred language, profile, admin back office | ✅ Done |
 | 1 | Blood tests | Results explained simply in Arabic and French, comparison of two reports, questions to ask the doctor | 🚧 In progress |
-| 2 | Reminders & visits | Medicine reminders with doses ticked "taken / missed", appointments with email reminder, 30-day tracking, printable medication plan, for yourself and the family's dependent profiles | ✅ Done |
+| 2 | Reminders & visits | Medicine reminders with doses ticked "taken / missed", appointments with email reminder, 30-day tracking, printable medication plan, **voice reminders** read aloud in Arabic, French or English (browser speech synthesis, no external service), for yourself and the family's dependent profiles | ✅ Done |
 | 3 | Health news & alerts | Reliable articles (WHO, Ministry of Health), favourites, alerts (campaigns, screening) | 🚧 In progress |
 | 4 | Medical record | Symptoms, dates, medicines, sleep, food, sport, clear report for the doctor | 🚧 In progress |
 | 5 | "What if…" program | Lifestyle scenarios ("I continue" vs "I change") and a personalised plan, without alarmism | 🚧 In progress |
@@ -121,7 +121,7 @@ LabTrack/
 
 `password_reset` (forgot password): `user_id` (foreign key), `code_hash` (the 6-digit code, hashed), `expires_at` (sending time + 5 minutes), `attempts` (wrong codes, max 5). Created automatically the first time it is used.
 
-Reminders & visits: `rappel_medicament` (medicine, dose, time, start/end dates), `prise_medicament` (one row per reminder and day: taken / missed, who ticked it), `rendez_vous` (reason, date, doctor, place, status planned / done / cancelled, email reminder sent). Each row belongs to an account (`user_id`) or a dependent profile (`membre_id`).
+Reminders & visits: `rappel_medicament` (medicine, dose, frequency 1-6 doses a day, one time per dose, start/end dates), `prise_medicament` (one row per reminder, day and dose time: taken / missed, who ticked it), `rendez_vous` (reason, date, doctor, place, status planned / done / cancelled, email reminder sent). Each row belongs to an account (`user_id`) or a dependent profile (`membre_id`).
 
 Family space: `famille`, `famille_membre` (account or dependent profile, role, sharing consent), `famille_invitation` (48 h), `famille_message`, `fiche_urgence` (emergency card, QR token), `famille_tentative` (wrong codes). See [docs/FAMILY_SPACE.md](docs/FAMILY_SPACE.md), including the columns the family space reads from the other modules.
 
@@ -281,3 +281,12 @@ Targeted UN Sustainable Development Goals: **SDG 3** Good health and well-being 
 This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
 
 The MIT License lets anyone use, copy, modify and redistribute the code, including for commercial purposes, as long as the copyright notice and the license text are kept. The software is provided "as is", without warranty. The third-party templates keep their own licenses (Novena: MIT, see `assets/front/LICENSE-novena.txt`; Registrar: see `assets/back/README-registrar.txt`).
+
+
+## Espace personnel — Rappels et visites
+
+Après connexion, ouvrir `index.php?page=rappels` pour accéder au nouvel espace personnel :
+Vue d'ensemble, Mes médicaments, Mes rappels, Rendez-vous, Carnet médical et Historique.
+Le carnet médical utilise la table `carnet_medical`, créée automatiquement par le module
+au premier accès (liée au compte connecté). Les autres données restent gérées par les tables
+du module Rappels & visites de ce projet.
