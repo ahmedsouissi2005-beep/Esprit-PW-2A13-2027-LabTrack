@@ -38,9 +38,11 @@ CREATE TABLE IF NOT EXISTS utilisateur (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Base créée avec une ANCIENNE version de ce fichier : CREATE TABLE IF NOT EXISTS ne
--- modifie pas la table existante. Les colonnes manquantes (code, session_token,
--- failed_attempts, locked_until, avatar) sont ajoutées automatiquement à la première
--- page ouverte (AuthController::ensureUserSchema) : rien à exécuter à la main.
+-- modifie pas la table existante. À la première page ouverte (une fois par session),
+-- AuthController::ensureUserSchema la répare : colonnes manquantes ajoutées (role, langue,
+-- code, session_token, failed_attempts, locked_until, avatar, created_at), ancien rôle
+-- "medecin" -> patient, codes absents, mal formés ou en double remplacés par un code
+-- aléatoire unique, puis code NOT NULL UNIQUE. Table absente : elle est créée.
 -- Les ALTER TABLE en bas de ce fichier restent possibles pour le faire dans phpMyAdmin.
 
 -- ------------------------------------------------------------

@@ -331,7 +331,16 @@ class AuthController extends Controller
                 return $code;
             }
         }
-        return null; // presque tous les codes sont pris (10 000 possibles)
+        // Presque tous les codes sont pris : on tire au hasard parmi ceux qui restent libres
+        $used = array_flip($db->query("SELECT code FROM utilisateur WHERE code REGEXP '^[0-9]{4}$'")->fetchAll(PDO::FETCH_COLUMN));
+        $free = [];
+        for ($n = 0; $n <= 9999; $n++) {
+            $code = str_pad((string) $n, 4, '0', STR_PAD_LEFT);
+            if (!isset($used[$code])) {
+                $free[] = $code;
+            }
+        }
+        return $free ? $free[random_int(0, count($free) - 1)] : null; // null : les 10 000 codes sont pris
     }
 
     // ==============================================================
@@ -546,54 +555,118 @@ class AuthController extends Controller
      * échouaient alors avec "Unknown column 'code'" ou "'locked_until'".
      * Ici, les colonnes manquantes sont ajoutées (et les comptes existants reçoivent leur
      * code personnel), pour que personne n'ait rien à exécuter après un git pull.
-     * Base déjà à jour : une seule petite requête, rien n'est modifié.
+     *
+     * Vérifiée UNE fois par session (comme les tables des modules). Si la réparation échoue
+     * (droits MySQL, base occupée...), l'erreur est notée dans le journal PHP, le site reste
+     * ouvert et on réessaie à la page suivante.
      */
     public static function ensureUserSchema(): void
     {
-        $db = Database::getConnexion();
-        $nullable = []; // nom de colonne => accepte NULL ?
+        if (!empty($_SESSION['user_schema_v2'])) {
+            return;
+        }
+        try {
+            self::upgradeUserTable(Database::getConnexion());
+            $_SESSION['user_schema_v2'] = true;
+        } catch (PDOException $e) {
+            error_log('LabTrack ensureUserSchema: ' . $e->getMessage());
+        }
+    }
+
+    /** Met la table utilisateur au niveau de database.sql (voir ensureUserSchema) */
+    private static function upgradeUserTable(PDO $db): void
+    {
+        $cols = []; // nom de colonne => ['nullable' => bool, 'type' => 'char(4)', ...]
         $rows = $db->query(
-            "SELECT column_name AS name, is_nullable AS nullable FROM information_schema.columns
+            "SELECT column_name AS name, is_nullable AS nullable, column_type AS type FROM information_schema.columns
              WHERE table_schema = DATABASE() AND table_name = 'utilisateur'"
         )->fetchAll();
         foreach ($rows as $row) {
-            $nullable[strtolower((string) $row['name'])] = $row['nullable'] === 'YES';
-        }
-        if ($nullable === []) {
-            return; // pas de table utilisateur : il faut importer database.sql
+            $cols[strtolower((string) $row['name'])] = ['nullable' => $row['nullable'] === 'YES', 'type' => strtolower((string) $row['type'])];
         }
 
-        // Dans l'ordre de database.sql : chaque colonne se place après la précédente
+        // Pas de table du tout (base vide) : on la crée comme dans database.sql
+        if ($cols === []) {
+            $db->exec(
+                "CREATE TABLE IF NOT EXISTS utilisateur (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nom VARCHAR(100) NOT NULL,
+                    email VARCHAR(150) NOT NULL UNIQUE,
+                    code CHAR(4) NOT NULL UNIQUE,
+                    password VARCHAR(255) NOT NULL,
+                    role ENUM('patient', 'admin') NOT NULL DEFAULT 'patient',
+                    langue ENUM('fr', 'ar', 'en') NOT NULL DEFAULT 'fr',
+                    session_token CHAR(64) NULL DEFAULT NULL,
+                    failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                    locked_until DATETIME NULL DEFAULT NULL,
+                    avatar VARCHAR(64) NULL DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            );
+            return;
+        }
+
+        // 1. Colonnes manquantes, dans l'ordre de database.sql : [définition, colonne d'avant].
+        //    "AFTER x" seulement si x existe (une très vieille table peut ne pas l'avoir).
         $columns = [
-            'code'            => 'CHAR(4) NULL AFTER email',
-            'session_token'   => 'CHAR(64) NULL DEFAULT NULL AFTER langue',
-            'failed_attempts' => 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER session_token',
-            'locked_until'    => 'DATETIME NULL DEFAULT NULL AFTER failed_attempts',
-            'avatar'          => 'VARCHAR(64) NULL DEFAULT NULL AFTER locked_until',
+            'role'            => ["ENUM('patient', 'admin') NOT NULL DEFAULT 'patient'", 'password'],
+            'langue'          => ["ENUM('fr', 'ar', 'en') NOT NULL DEFAULT 'fr'", 'role'],
+            'code'            => ['CHAR(4) NULL', 'email'],
+            'session_token'   => ['CHAR(64) NULL DEFAULT NULL', 'langue'],
+            'failed_attempts' => ['TINYINT UNSIGNED NOT NULL DEFAULT 0', 'session_token'],
+            'locked_until'    => ['DATETIME NULL DEFAULT NULL', 'failed_attempts'],
+            'avatar'          => ['VARCHAR(64) NULL DEFAULT NULL', 'locked_until'],
+            'created_at'      => ['TIMESTAMP DEFAULT CURRENT_TIMESTAMP', 'avatar'],
         ];
-        foreach ($columns as $name => $definition) {
-            if (!array_key_exists($name, $nullable)) {
-                self::execSchemaChange($db, "ALTER TABLE utilisateur ADD COLUMN $name $definition");
-                $nullable[$name] = true;
+        foreach ($columns as $name => [$definition, $after]) {
+            if (!isset($cols[$name])) {
+                $position = isset($cols[$after]) ? " AFTER $after" : '';
+                self::execSchemaChange($db, "ALTER TABLE utilisateur ADD COLUMN $name $definition$position");
+                $cols[$name] = ['nullable' => true, 'type' => $name === 'code' ? 'char(4)' : ''];
             }
         }
 
-        // Colonne code encore facultative : comptes créés avant le code personnel.
-        // Chacun reçoit un code aléatoire unique, puis la colonne devient NOT NULL UNIQUE.
-        if ($nullable['code']) {
-            $update = $db->prepare('UPDATE utilisateur SET code = :code WHERE id = :id');
-            $ids = $db->query('SELECT id FROM utilisateur WHERE code IS NULL')->fetchAll(PDO::FETCH_COLUMN);
-            foreach ($ids as $id) {
-                $code = self::generateUniqueCode($db);
-                if ($code === null) {
-                    return; // plus de code libre : la colonne reste facultative
-                }
-                $update->execute(['code' => $code, 'id' => (int) $id]);
+        // 2. Anciennes listes de valeurs : rôle "medecin" (supprimé) -> patient,
+        //    langue inconnue -> fr. Sinon MySQL refuse la nouvelle liste.
+        $enums = [
+            'role'   => [['patient', 'admin'], 'patient', "ENUM('patient', 'admin') NOT NULL DEFAULT 'patient'"],
+            'langue' => [['fr', 'ar', 'en'], 'fr', "ENUM('fr', 'ar', 'en') NOT NULL DEFAULT 'fr'"],
+        ];
+        foreach ($enums as $name => [$allowed, $default, $definition]) {
+            $expected = 'enum(' . implode(',', array_map(fn($v) => "'$v'", $allowed)) . ')';
+            if ($cols[$name]['type'] !== $expected || $cols[$name]['nullable']) {
+                $in = "'" . implode("','", $allowed) . "'";
+                $db->exec("UPDATE utilisateur SET $name = '$default' WHERE $name IS NULL OR $name NOT IN ($in)");
+                self::execSchemaChange($db, "ALTER TABLE utilisateur MODIFY $name $definition");
             }
+        }
+
+        // 3. Code personnel : chaque compte doit avoir 4 chiffres, et personne le même.
+        //    Ancien type (INT, VARCHAR...) : on élargit d'abord pour ne rien tronquer.
+        if ($cols['code']['type'] !== 'char(4)') {
+            self::execSchemaChange($db, 'ALTER TABLE utilisateur MODIFY code VARCHAR(64) NULL');
+            $cols['code']['nullable'] = true;
+        }
+        // Comptes à corriger : pas de code, code mal formé, ou code déjà pris par un compte plus ancien
+        $bad = $db->query(
+            "SELECT u.id FROM utilisateur u
+             WHERE u.code IS NULL OR u.code NOT REGEXP '^[0-9]{4}$'
+                OR EXISTS (SELECT 1 FROM utilisateur o WHERE o.code = u.code AND o.id < u.id)
+             ORDER BY u.id"
+        )->fetchAll(PDO::FETCH_COLUMN);
+        $update = $db->prepare('UPDATE utilisateur SET code = :code WHERE id = :id');
+        foreach ($bad as $id) {
+            $code = self::generateUniqueCode($db);
+            if ($code === null) {
+                return; // les 10 000 codes sont pris : la colonne reste comme elle est
+            }
+            $update->execute(['code' => $code, 'id' => (int) $id]);
+        }
+        if ($cols['code']['type'] !== 'char(4)' || $cols['code']['nullable']) {
             self::execSchemaChange($db, 'ALTER TABLE utilisateur MODIFY code CHAR(4) NOT NULL');
-            if (!$db->query("SHOW INDEX FROM utilisateur WHERE Column_name = 'code' AND Non_unique = 0")->fetch()) {
-                self::execSchemaChange($db, 'ALTER TABLE utilisateur ADD UNIQUE KEY code (code)');
-            }
+        }
+        if (!$db->query("SHOW INDEX FROM utilisateur WHERE Column_name = 'code' AND Non_unique = 0")->fetch()) {
+            self::execSchemaChange($db, 'ALTER TABLE utilisateur ADD UNIQUE KEY code (code)');
         }
     }
 
