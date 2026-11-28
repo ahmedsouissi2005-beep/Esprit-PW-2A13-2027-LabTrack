@@ -60,8 +60,8 @@ require_once __DIR__ . '/controllers/AdminController.php';
 require_once __DIR__ . '/controllers/FamilyController.php';
 require_once __DIR__ . '/controllers/RappelController.php';
 
-// Base créée avec une ancienne version de database.sql : ajoute les colonnes
-// manquantes de la table utilisateur (avant toute requête qui les utilise)
+// Base créée avec une ancienne version de database.sql : répare la table utilisateur
+// (avant toute requête qui l'utilise). Vérifié une fois par session.
 AuthController::ensureUserSchema();
 
 // Une seule connexion à la fois : ferme cette session si le compte
