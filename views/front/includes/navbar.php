@@ -56,6 +56,7 @@ $isAdmin  = ($_SESSION['role'] ?? '') === 'admin';
 
                     <?php if ($isLogged): ?>
                         <li class="nav-item <?= navActive('dashboard', $currentPage) ?>"><a class="nav-link" href="index.php?page=dashboard"><?= $t['nav_dashboard'] ?></a></li>
+                        <li class="nav-item <?= navActive('bilans', $currentPage) ?>"><a class="nav-link" href="index.php?page=bilans"><?= $t['bil_nav'] ?></a></li>
                         <li class="nav-item <?= navActive('rappels', $currentPage) ?>"><a class="nav-link" href="index.php?page=rappels"><?= $t['rap_nav'] ?></a></li>
                         <li class="nav-item <?= navActive('family', $currentPage) ?>"><a class="nav-link" href="index.php?page=family"><?= $t['fam_nav'] ?></a></li>
                         <li class="nav-item <?= navActive('profile', $currentPage) ?>"><a class="nav-link" href="index.php?page=profile"><?= $t['nav_profile'] ?></a></li>

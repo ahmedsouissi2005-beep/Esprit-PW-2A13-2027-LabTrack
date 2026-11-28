@@ -27,6 +27,14 @@ return [
     'rdv_delete'    => ['RappelController', 'deleteAppointment'],
     'rappels_print' => ['RappelController', 'printPlan'],         // plan de prise imprimable (?owner=)
 
+    // ---------------- ANALYSES SANGUINES (Ismail) ----------------
+    'bilans'        => ['BilanController', 'home'],      // liste de mes bilans
+    'bilan_upload'  => ['BilanController', 'upload'],    // envoi du rapport PDF/photo, lu par l'IA
+    'bilan_review'  => ['BilanController', 'review'],    // relecture des valeurs, puis enregistrement
+    'bilan_view'    => ['BilanController', 'view'],      // détail d'un bilan (?id=)
+    'bilan_file'    => ['BilanController', 'file'],      // rapport d'origine, servi par PHP (?id=)
+    'bilan_delete'  => ['BilanController', 'delete'],    // POST
+
     // ---------------- ESPACE FAMILLE (Ahmed) ----------------
     'family'             => ['FamilyController', 'familyHome'],       // mes familles, invitations reçues, créer
     'family_view'        => ['FamilyController', 'familyView'],       // tableau de bord (?id=&tab=)
