@@ -37,9 +37,11 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Base déjà créée avant la photo de profil : la colonne est ajoutée automatiquement
--- au premier envoi de photo (AuthController::ensureAvatarColumn), ou à la main :
--- ALTER TABLE utilisateur ADD COLUMN avatar VARCHAR(64) NULL DEFAULT NULL AFTER locked_until;
+-- Base créée avec une ANCIENNE version de ce fichier : CREATE TABLE IF NOT EXISTS ne
+-- modifie pas la table existante. Les colonnes manquantes (code, session_token,
+-- failed_attempts, locked_until, avatar) sont ajoutées automatiquement à la première
+-- page ouverte (AuthController::ensureUserSchema) : rien à exécuter à la main.
+-- Les ALTER TABLE en bas de ce fichier restent possibles pour le faire dans phpMyAdmin.
 
 -- ------------------------------------------------------------
 -- Mot de passe oublié : un code à 6 chiffres envoyé par email, valable 5 minutes.
