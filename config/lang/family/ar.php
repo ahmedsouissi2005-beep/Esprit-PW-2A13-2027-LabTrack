@@ -223,4 +223,8 @@ return [
     'fam_admin_type'        => 'النوع',
     'fam_admin_account'     => 'حساب LabTrack',
     'fam_admin_joined'      => 'تاريخ الانضمام',
+
+    // Alerte de stock (module Rappels & visites)
+    'fam_alert_stock' => '%s: %s، تبقى حوالي %d يوم من العلاج. حان وقت الشراء.',
+    'fam_alert_stock_out' => '%s: %s، العلبة فارغة.',
 ];

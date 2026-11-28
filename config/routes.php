@@ -26,6 +26,8 @@ return [
     'rdv_status'    => ['RappelController', 'appointmentStatus'], // POST : fait / annulé / prévu
     'rdv_delete'    => ['RappelController', 'deleteAppointment'],
     'rappels_print' => ['RappelController', 'printPlan'],         // plan de prise imprimable (?owner=)
+    'rappel_stock'  => ['RappelController', 'refill'],            // POST : nouveau stock d'un médicament
+    'rdv_ics'       => ['RappelController', 'exportCalendar'],    // agenda .ics : ?id= ou ?all=1
 
     // ---------------- ESPACE FAMILLE (Ahmed) ----------------
     'family'             => ['FamilyController', 'familyHome'],       // mes familles, invitations reçues, créer

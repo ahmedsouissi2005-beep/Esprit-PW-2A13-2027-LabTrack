@@ -7,14 +7,21 @@
  */
 $moments = ['morning' => ['00:00', '11:59'], 'noon' => ['12:00', '16:59'], 'evening' => ['17:00', '20:59'], 'night' => ['21:00', '23:59']];
 $byMoment = [];
+// Une ligne par prise : un médicament 3 fois par jour apparaît à 3 moments de la journée
 foreach ($reminders as $r) {
-    foreach ($moments as $key => [$from, $to]) {
-        if ($r->getHeure() >= $from && $r->getHeure() <= $to) {
-            $byMoment[$key][] = $r;
-            break;
+    foreach ($r->getHeures() as $heure) {
+        foreach ($moments as $key => [$from, $to]) {
+            if ($heure >= $from && $heure <= $to) {
+                $byMoment[$key][] = ['r' => $r, 'heure' => $heure];
+                break;
+            }
         }
     }
 }
+foreach ($byMoment as &$list) {
+    usort($list, fn($a, $b) => strcmp($a['heure'], $b['heure']));
+}
+unset($list);
 ?>
 <!DOCTYPE html>
 <html lang="<?= e($lang) ?>" dir="<?= $dir ?>">
@@ -52,9 +59,9 @@ foreach ($reminders as $r) {
                     </tr>
                     </thead>
                     <tbody>
-                    <?php foreach ($byMoment[$key] as $r): ?>
+                    <?php foreach ($byMoment[$key] as $line): $r = $line['r']; ?>
                         <tr>
-                            <td><strong><?= e($r->getHeure()) ?></strong></td>
+                            <td><strong><?= e($line['heure']) ?></strong></td>
                             <td><?= e($r->getMedicament()) ?></td>
                             <td><?= e($r->getDose()) ?></td>
                             <td><?= e($r->getNote()) ?><?= $r->getDateFin() ? '<br><small>' . sprintf($t['rap_until'], e($r->getDateFin())) . '</small>' : '' ?></td>

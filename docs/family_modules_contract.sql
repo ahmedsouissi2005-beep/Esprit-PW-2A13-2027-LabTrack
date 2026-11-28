@@ -33,14 +33,16 @@ CREATE TABLE IF NOT EXISTS rendez_vous (
     CONSTRAINT fk_rdv_membre FOREIGN KEY (membre_id) REFERENCES famille_membre(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Module "Rappels & visites" (Aziz) : un médicament à une heure, chaque jour entre deux dates
+-- Module "Rappels & visites" (Aziz) : un médicament pris 1 à 6 fois par jour, chaque jour entre deux dates
 CREATE TABLE IF NOT EXISTS rappel_medicament (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT NULL,
     membre_id  INT NULL,
     medicament VARCHAR(100) NOT NULL,
     dose       VARCHAR(50) NULL,              -- "1 comprimé", "500 mg"
-    heure      TIME NOT NULL,
+    heure      TIME NOT NULL,                 -- 1re prise de la journée
+    heures     VARCHAR(60) NULL,              -- toutes les prises : "08:00,14:00,20:00"
+    frequence  TINYINT NOT NULL DEFAULT 1,    -- nombre de prises par jour
     date_debut DATE NOT NULL,
     date_fin   DATE NULL,                     -- NULL = traitement sans fin prévue
     CONSTRAINT fk_rappel_user FOREIGN KEY (user_id) REFERENCES utilisateur(id) ON DELETE CASCADE,
@@ -52,8 +54,9 @@ CREATE TABLE IF NOT EXISTS prise_medicament (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     rappel_id  INT NOT NULL,
     date_prise DATE NOT NULL,
+    heure      TIME NOT NULL DEFAULT '00:00:00', -- heure de la prise cochée
     statut     ENUM('pris','oublie') NOT NULL DEFAULT 'pris',
-    UNIQUE KEY uq_prise (rappel_id, date_prise),
+    UNIQUE KEY uq_prise (rappel_id, date_prise, heure),
     CONSTRAINT fk_prise_rappel FOREIGN KEY (rappel_id) REFERENCES rappel_medicament(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
